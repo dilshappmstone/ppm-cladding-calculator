@@ -263,21 +263,44 @@ function toggleFields(){
 <div class="result">
 
 <h3>Calculation</h3>
-<p>Total Area: {{result.total_area}} m²</p>
-<p>Corner Deduction: {{result.corner_area}} m²</p>
-<p>Net Area: {{result.net_area}} m²</p>
-<p>With Wastage: {{result.area_waste}} m²</p>
 
-<h3>Cost</h3>
-<p>Body: ${{result.body_total}}</p>
-<p>Corner: ${{result.corner_total}}</p>
+<p><b>Total Area:</b> {{"%.2f"|format(result.total_area)}} m²</p>
+<p><b>Corner Deduction:</b> {{"%.2f"|format(result.corner_area)}} m²</p>
+<p><b>Net Area:</b> {{"%.2f"|format(result.net_area)}} m²</p>
+<p><b>With Wastage:</b> {{"%.2f"|format(result.area_waste)}} m²</p>
+
+<hr>
+
+<h3>Cost Breakdown</h3>
+
+<p>
+Body: {{"%.2f"|format(result.area_waste)}} × ${{"{:,.2f}".format(result.body_rate)}} 
+= <b>${{"{:,.2f}".format(result.body_total)}}</b>
+</p>
+
+<p>
+Corner: {{result.corner_pcs}} pcs × ${{"{:,.2f}".format(result.corner_rate)}} 
+= <b>${{"{:,.2f}".format(result.corner_total)}}</b>
+</p>
 
 {% if result.install %}
-<p>Installation Body: ${{result.install_body}}</p>
-<p>Installation Corner: ${{result.install_corner}}</p>
+<p>
+Installation Body: <b>${{"{:,.2f}".format(result.install_body)}}</b>
+</p>
+
+<p>
+Installation Corner: <b>${{"{:,.2f}".format(result.install_corner)}}</b>
+</p>
 {% endif %}
 
-<h2>Total: ${{result.total}}</h2>
+<hr>
+
+<h3>Totals</h3>
+
+<p>Subtotal: ${{"{:,.2f}".format(result.subtotal)}}</p>
+<p>GST (10%): ${{"{:,.2f}".format(result.gst)}}</p>
+
+<h2>Total (Inc GST): ${{"{:,.2f}".format(result.total)}}</h2>
 
 <form method="post" action="/pdf">
 {% for k,v in result.items() %}
@@ -341,31 +364,38 @@ def home():
         gst = subtotal*GST_RATE
         total = subtotal+gst
 
-        result={
-            "product_name":p["name"],
-            "size":p["size"],
-            "body_code":p["body_code"],
-            "corner_code":p["corner_code"],
-            "area_waste":area_waste,
-            "corner_pcs":corner_pcs,
-            "corner_lm":corner_lm,
-            "body_rate":p["body_price"],
-            "corner_rate":p["corner_price"],
-            "body_total":body_total,
-            "corner_total":corner_total,
-            "install":request.form.get("install"),
-            "install_body":install_body,
-            "install_corner":install_corner,
-            "subtotal":subtotal,
-            "gst":gst,
-            "total":total,
-            "customer":request.form.get("customer"),
-            "project":request.form.get("project"),
-            "address":request.form.get("address"),
-            "total_area":total_area,
-            "corner_area":corner_area,
-            "net_area":net_area
-        }
+        result = {
+    "product_name": p["name"],
+    "size": p["size"],
+    "body_code": p["body_code"],
+    "corner_code": p["corner_code"],
+
+    "area_waste": round(area_waste, 2),
+    "corner_pcs": corner_pcs,
+    "corner_lm": round(corner_lm, 2),
+
+    "body_rate": p["body_price"],
+    "corner_rate": p["corner_price"],
+
+    "body_total": round(body_total, 2),
+    "corner_total": round(corner_total, 2),
+
+    "install": request.form.get("install"),
+    "install_body": round(install_body, 2),
+    "install_corner": round(install_corner, 2),
+
+    "subtotal": round(subtotal, 2),
+    "gst": round(gst, 2),
+    "total": round(total, 2),
+
+    "customer": request.form.get("customer"),
+    "project": request.form.get("project"),
+    "address": request.form.get("address"),
+
+    "total_area": round(total_area, 2),
+    "corner_area": round(corner_area, 2),
+    "net_area": round(net_area, 2)
+}
 
         return render_template_string(HTML,result=result,products=PRODUCTS)
 
