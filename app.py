@@ -66,7 +66,7 @@ function toggleFields(){
 <div class="container">
 <h2>PPM Cladding Calculator</h2>
 
-<form method="post">
+<form method="post" action="/">
 
 <h3>Application Type</h3>
 <select name="type" id="type" onchange="toggleFields()">
