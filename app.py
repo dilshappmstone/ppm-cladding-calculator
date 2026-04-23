@@ -28,10 +28,11 @@ PRODUCTS = {
     "CC": {"name": "Country Cross", "body_code": "CLD011", "corner_code": "CLD012", "body_price": 75, "corner_price": 25}
 }
 
-def money(v): return "{:.2f}".format(float(v))
+def money(v):
+    return "{:.2f}".format(float(v))
 
 # =========================
-# HTML (DETAILED OUTPUT)
+# HTML
 # =========================
 HTML = """
 <!DOCTYPE html>
@@ -44,15 +45,22 @@ HTML = """
 <style>
 body {font-family: Arial; background:#f4f6f8;}
 .container {max-width:900px;margin:auto;background:white;padding:20px;border-radius:10px;}
-input, select {width:100%;padding:12px;margin-top:8px;}
+input, select, textarea {width:100%;padding:12px;margin-top:8px;}
 button {width:100%;padding:14px;margin-top:20px;background:black;color:white;}
 .result {background:#f9fafb;padding:15px;margin-top:20px;border-radius:8px;}
+.row {display:flex; gap:10px;}
+@media(max-width:768px){ .row{flex-direction:column;} }
 </style>
 
 <script>
 function toggleFields(){
  let t=document.getElementById("type").value;
- document.getElementById("wall").style.display=(t=="wall")?"block":"none";
+
+ document.getElementById("wallSection").style.display =
+    (t=="wall" || t=="floor") ? "block" : "none";
+
+ document.getElementById("pillarSection").style.display =
+    (t=="pillar") ? "block" : "none";
 }
 </script>
 
@@ -65,17 +73,37 @@ function toggleFields(){
 
 <form method="post">
 
+<label>Application Type</label>
 <select name="type" id="type" onchange="toggleFields()" required>
 <option value="">Select Type</option>
 <option value="wall">Wall</option>
+<option value="floor">Floor</option>
+<option value="pillar">Pillar</option>
 </select>
 
-<div id="wall" style="display:none;">
+<!-- WALL / FLOOR -->
+<div id="wallSection" style="display:none;">
+<div class="row">
 <input name="length" placeholder="Length (m)">
-<input name="height" placeholder="Height (m)">
-<input name="corner_lm" placeholder="Corner LM">
+<input name="height" placeholder="Height / Width (m)">
+</div>
+<input name="corner_lm" placeholder="Corner Length (LM)">
 </div>
 
+<!-- PILLAR -->
+<div id="pillarSection" style="display:none;">
+<div class="row">
+<input name="pillar_height" placeholder="Pillar Height (m)">
+<input name="front" placeholder="Front Width (m)">
+</div>
+<input name="depth" placeholder="Return Depth (m)">
+<select name="sides">
+<option value="3">3 sides</option>
+<option value="4">4 sides</option>
+</select>
+</div>
+
+<label>Product</label>
 <select name="product">
 {% for k,p in products.items() %}
 <option value="{{k}}">
@@ -87,6 +115,11 @@ function toggleFields(){
 <label>
 <input type="checkbox" name="install"> Include Installation
 </label>
+
+<h3>Customer Details</h3>
+<input name="customer" placeholder="Customer Name">
+<input name="project" placeholder="Project Reference">
+<textarea name="address" placeholder="Site Address"></textarea>
 
 <button>Generate Quote</button>
 
@@ -140,30 +173,46 @@ def home():
 
     if request.method=="POST":
 
-        p=PRODUCTS[request.form.get("product")]
+        typ = request.form.get("type")
+        p = PRODUCTS.get(request.form.get("product"))
 
         length=float(request.form.get("length") or 0)
         height=float(request.form.get("height") or 0)
         corner_lm=float(request.form.get("corner_lm") or 0)
 
-        total_area=length*height
-        corner_area=corner_lm*(2*CORNER_RETURN)
-        net_area=max(total_area-corner_area,0)
-        area_waste=net_area*1.1
+        ph=float(request.form.get("pillar_height") or 0)
+        front=float(request.form.get("front") or 0)
+        depth=float(request.form.get("depth") or 0)
+        sides=int(request.form.get("sides") or 3)
 
-        corner_pcs=math.ceil(corner_lm/PIECE_HEIGHT)
+        # FULL LOGIC
+        if typ in ["wall","floor"]:
+            total_area = length * height
+        else:
+            if sides == 4:
+                total_area = ph*(2*front + 2*depth)
+                corner_lm = ph*4
+            else:
+                total_area = ph*(front + 2*depth)
+                corner_lm = ph*2
 
-        body_total=area_waste*p["body_price"]
-        corner_total=corner_pcs*p["corner_price"]
+        corner_area = corner_lm*(2*CORNER_RETURN)
+        net_area = max(total_area-corner_area,0)
+        area_waste = net_area*1.1
 
-        install_body=install_corner=0
+        corner_pcs = math.ceil(corner_lm/PIECE_HEIGHT)
+
+        body_total = area_waste*p["body_price"]
+        corner_total = corner_pcs*p["corner_price"]
+
+        install_body = install_corner = 0
         if request.form.get("install"):
-            install_body=area_waste*INSTALL_BODY_RATE
-            install_corner=corner_lm*INSTALL_CORNER_RATE
+            install_body = area_waste*INSTALL_BODY_RATE
+            install_corner = corner_lm*INSTALL_CORNER_RATE
 
-        subtotal=body_total+corner_total+install_body+install_corner
-        gst=subtotal*GST_RATE
-        total=subtotal+gst
+        subtotal = body_total+corner_total+install_body+install_corner
+        gst = subtotal*GST_RATE
+        total = subtotal+gst
 
         result={
             "product":p["name"],
@@ -184,7 +233,10 @@ def home():
             "install_corner":round(install_corner,2),
             "subtotal":round(subtotal,2),
             "gst":round(gst,2),
-            "total":round(total,2)
+            "total":round(total,2),
+            "customer":request.form.get("customer"),
+            "project":request.form.get("project"),
+            "address":request.form.get("address")
         }
 
         return render_template_string(HTML,result=result,products=PRODUCTS)
@@ -192,31 +244,23 @@ def home():
     return render_template_string(HTML,result=None,products=PRODUCTS)
 
 # =========================
-# PDF (FULL PREMIUM)
+# PDF
 # =========================
 @app.route("/pdf", methods=["POST"])
 def pdf():
 
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer)
-
     styles = getSampleStyleSheet()
-    center = ParagraphStyle(name='center', alignment=TA_CENTER)
-    right = ParagraphStyle(name='right', alignment=TA_RIGHT)
+    center = ParagraphStyle(name='c', alignment=TA_CENTER)
 
     story = []
 
-    # =========================
-    # LOGO
-    # =========================
     try:
-        story.append(Image("static/ppm-stone-logo.png", width=150, height=60))
+        story.append(Image("static/ppm-stone-logo.png", width=140, height=60))
     except:
         pass
 
-    # =========================
-    # COMPANY HEADER
-    # =========================
     story.append(Paragraph("<b>PPM Stone</b>", styles['Title']))
     story.append(Paragraph("PPM Enterprises Pty Ltd", styles['Normal']))
     story.append(Paragraph("Factory 2, 64-70 Edison Road Dandenong South VIC 3175", styles['Normal']))
@@ -228,18 +272,12 @@ def pdf():
     story.append(Paragraph("<b>QUOTE</b>", center))
     story.append(Spacer(1,10))
 
-    # =========================
-    # QUOTE INFO
-    # =========================
     now = datetime.now()
     story.append(Paragraph(now.strftime("Quote No: QU-%y%m%d01"), styles['Normal']))
     story.append(Paragraph(now.strftime("Date: %d/%m/%Y"), styles['Normal']))
 
     story.append(Spacer(1,10))
 
-    # =========================
-    # CUSTOMER DETAILS
-    # =========================
     story.append(Paragraph("<b>Customer Details</b>", styles['Heading3']))
     story.append(Paragraph(f"Customer Name: {request.form.get('customer')}", styles['Normal']))
     story.append(Paragraph(f"Project Reference: {request.form.get('project')}", styles['Normal']))
@@ -247,55 +285,23 @@ def pdf():
 
     story.append(Spacer(1,15))
 
-    # =========================
-    # PRODUCT TABLE
-    # =========================
     table_data = [
-        ["Code", "Description", "Qty", "Unit", "Unit Price", "Amount"],
-
-        [
-            request.form.get("body_code"),
-            f"PPM Cladding | Body | {request.form.get('product')} | 20–40mm",
-            request.form.get("area_waste"),
-            "m²",
-            "$"+money(request.form.get("body_rate")),
-            "$"+money(request.form.get("body_total"))
-        ],
-
-        [
-            request.form.get("corner_code"),
-            f"PPM Cladding | Corner | {request.form.get('product')} | 20–40mm",
-            request.form.get("corner_pcs"),
-            "pcs",
-            "$"+money(request.form.get("corner_rate")),
-            "$"+money(request.form.get("corner_total"))
-        ]
+        ["Code","Description","Qty","Unit","Unit Price","Amount"],
+        [request.form.get("body_code"), f"PPM Cladding | Body | {request.form.get('product')} | 20–40mm",
+         request.form.get("area_waste"), "m²", "$"+money(request.form.get("body_rate")), "$"+money(request.form.get("body_total"))],
+        [request.form.get("corner_code"), f"PPM Cladding | Corner | {request.form.get('product')} | 20–40mm",
+         request.form.get("corner_pcs"), "pcs", "$"+money(request.form.get("corner_rate")), "$"+money(request.form.get("corner_total"))]
     ]
 
-    # INSTALLATION
     if request.form.get("install") == "on":
-        table_data.append([
-            request.form.get("body_code")+"-I",
-            "Installation - Body",
-            request.form.get("area_waste"),
-            "m²",
-            "$120",
-            "$"+money(request.form.get("install_body"))
-        ])
+        table_data.append([request.form.get("body_code")+"-I","Installation Body",
+                           request.form.get("area_waste"),"m²","$120", "$"+money(request.form.get("install_body"))])
+        table_data.append([request.form.get("corner_code")+"-I","Installation Corner",
+                           request.form.get("corner_lm"),"LM","$120", "$"+money(request.form.get("install_corner"))])
 
-        table_data.append([
-            request.form.get("corner_code")+"-I",
-            "Installation - Corner",
-            request.form.get("corner_lm"),
-            "LM",
-            "$120",
-            "$"+money(request.form.get("install_corner"))
-        ])
-
-    table = Table(table_data, colWidths=[70,200,60,50,80,80])
-
+    table = Table(table_data)
     table.setStyle(TableStyle([
-        ('GRID',(0,0),(-1,-1),0.8,colors.black),
+        ('GRID',(0,0),(-1,-1),1,colors.black),
         ('BACKGROUND',(0,0),(-1,0),colors.black),
         ('TEXTCOLOR',(0,0),(-1,0),colors.white),
         ('ALIGN',(2,1),(-1,-1),'RIGHT')
@@ -303,47 +309,52 @@ def pdf():
 
     story.append(table)
 
-    # =========================
-    # TOTALS TABLE
-    # =========================
     totals = [
         ["Subtotal (Ex GST)", "$"+money(request.form.get("subtotal"))],
         ["GST (10%)", "$"+money(request.form.get("gst"))],
         ["TOTAL (INC GST)", "$"+money(request.form.get("total"))]
     ]
 
-    totals_table = Table(totals, colWidths=[300,120])
-
-    totals_table.setStyle(TableStyle([
-        ('GRID',(0,0),(-1,-1),0.8,colors.black),
-        ('ALIGN',(1,0),(1,-1),'RIGHT'),
-        ('FONTNAME',(0,2),(-1,2),'Helvetica-Bold'),
+    t2 = Table(totals)
+    t2.setStyle(TableStyle([
+        ('GRID',(0,0),(-1,-1),1,colors.black),
         ('BACKGROUND',(0,2),(-1,2),colors.lightgrey)
     ]))
 
     story.append(Spacer(1,15))
-    story.append(totals_table)
+    story.append(t2)
 
-    # =========================
-    # NOTES & DISCLAIMER
-    # =========================
-    story.append(Spacer(1,20))
+    story.append(Spacer(1,25))
 
-    story.append(Paragraph(
-        "<b>Notes:</b> This is an estimate of cost, the final figures may vary after the final site inspection.",
-        styles['Normal']
-    ))
+# NOTES
+story.append(Paragraph(
+    "<b>Notes:</b>",
+    styles['Heading3']
+))
 
-    story.append(Spacer(1,8))
+story.append(Spacer(1,6))
 
-    story.append(Paragraph(
-        "<b>Disclaimer:</b> Please note that our bluestones and stone claddings are natural, so variations in colour, texture, and veining may occur. These differences from samples or images are natural and enhance the stone's unique character.",
-        styles['Normal']
-    ))
+story.append(Paragraph(
+    "This is an estimate of cost, the final figures may vary after the final site inspection.",
+    styles['Normal']
+))
 
-    # =========================
-    # BUILD PDF
-    # =========================
+story.append(Spacer(1,12))
+
+# DISCLAIMER
+story.append(Paragraph(
+    "<b>Disclaimer:</b>",
+    styles['Heading3']
+))
+
+story.append(Spacer(1,6))
+
+story.append(Paragraph(
+    "Please note that our bluestones and stone claddings are natural, so variations in colour, texture, and veining may occur. "
+    "These differences from samples or images are natural and enhance the stone's unique character.",
+    styles['Normal']
+))
+
     doc.build(story)
     buffer.seek(0)
 
