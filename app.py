@@ -46,34 +46,106 @@ HTML = """
 <title>PPM Cladding Calculator</title>
 
 <style>
-body {font-family: Arial; background:#f4f6f8;}
-.container {max-width:950px;margin:auto;background:white;padding:30px;border-radius:10px;}
+body {
+    font-family: Arial;
+    background:#f4f6f8;
+}
 
-.header {display:flex;gap:10px;align-items:center;}
-.header img {height:50px;}
+.container {
+    max-width:900px;
+    margin:auto;
+    background:white;
+    padding:30px;
+    border-radius:10px;
+}
 
-.product-grid {display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
-.product-card {border:2px solid #eee;border-radius:8px;padding:10px;cursor:pointer;}
-.product-card img {width:100%;height:140px;object-fit:cover;}
-.product-card.active {border:2px solid black;}
+.header {
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
 
-.switch {position:relative;width:50px;height:25px;}
+.header img {
+    height:50px;
+}
+
+.section {
+    margin-top:25px;
+}
+
+input, select, textarea {
+    width:100%;
+    padding:10px;
+    margin-top:8px;
+    border:1px solid #ccc;
+    border-radius:6px;
+}
+
+.row {
+    display:flex;
+    gap:10px;
+}
+
+.row input {
+    flex:1;
+}
+
+.hidden {
+    display:none;
+}
+
+button {
+    width:100%;
+    padding:14px;
+    margin-top:20px;
+    background:black;
+    color:white;
+    border:none;
+    border-radius:6px;
+}
+
+.switch {
+    position:relative;
+    width:50px;
+    height:25px;
+}
+
 .switch input {display:none;}
-.slider {position:absolute;top:0;left:0;right:0;bottom:0;background:#ccc;border-radius:25px;}
-.slider:before {content:"";position:absolute;height:20px;width:20px;left:3px;bottom:3px;background:white;border-radius:50%;}
-input:checked + .slider {background:black;}
-input:checked + .slider:before {transform:translateX(24px);}
 
-button {width:100%;padding:14px;background:black;color:white;border:none;margin-top:20px;}
+.slider {
+    position:absolute;
+    top:0;left:0;right:0;bottom:0;
+    background:#ccc;
+    border-radius:25px;
+}
 
-.result {background:#f9fafb;padding:20px;margin-top:25px;border-radius:6px;}
+.slider:before {
+    content:"";
+    position:absolute;
+    width:20px;height:20px;
+    left:3px;bottom:3px;
+    background:white;
+    border-radius:50%;
+}
+
+input:checked + .slider {
+    background:black;
+}
+
+input:checked + .slider:before {
+    transform:translateX(24px);
+}
 </style>
 
 <script>
-function selectProduct(code, el){
-    document.getElementById("product").value = code;
-    document.querySelectorAll(".product-card").forEach(x=>x.classList.remove("active"));
-    el.classList.add("active");
+function toggleFields(){
+    let type = document.getElementById("type").value;
+
+    document.getElementById("wallSection").style.display =
+        (type === "wall" || type === "floor") ? "block" : "none";
+
+    document.getElementById("pillarSection").style.display =
+        (type === "pillar") ? "block" : "none";
 }
 </script>
 
@@ -90,42 +162,58 @@ function selectProduct(code, el){
 
 <form method="post">
 
-<h3>Application Type</h3>
-<select name="type">
+<div class="section">
+<label>Application Type</label>
+<select name="type" id="type" onchange="toggleFields()" required>
+<option value="">-- Select Application --</option>
 <option value="wall">Wall</option>
 <option value="floor">Floor</option>
 <option value="pillar">Pillar</option>
 </select>
+</div>
+
+<!-- WALL / FLOOR -->
+<div id="wallSection" class="section hidden">
 
 <h3>Wall / Floor Inputs</h3>
+
+<div class="row">
 <input name="length" placeholder="Length (m)">
 <input name="height" placeholder="Height / Width (m)">
+</div>
+
 <input name="corner_lm" placeholder="Corner Length (LM)">
+</div>
+
+<!-- PILLAR -->
+<div id="pillarSection" class="section hidden">
 
 <h3>Pillar Inputs</h3>
+
+<div class="row">
 <input name="pillar_height" placeholder="Pillar Height (m)">
 <input name="front" placeholder="Front Width (m)">
+</div>
+
 <input name="depth" placeholder="Return Depth (m)">
+
 <select name="sides">
 <option value="3">3 Sides</option>
 <option value="4">4 Sides</option>
 </select>
 
-<h3>Select Product</h3>
-<div class="product-grid">
+</div>
+
+<div class="section">
+<label>Product</label>
+<select name="product">
 {% for k,p in products.items() %}
-<div class="product-card" onclick="selectProduct('{{k}}', this)">
-<img src="/static/{{k}}.jpg">
-<p><b>{{p.name}}</b><br>
-<small>Code: {{p.body_code}} / {{p.corner_code}}</small>
-</p>
-</div>
+<option value="{{k}}">{{p.name}} ({{p.body_code}})</option>
 {% endfor %}
+</select>
 </div>
 
-<input type="hidden" name="product" id="product" value="RB">
-
-<div style="display:flex;justify-content:space-between;margin-top:15px;">
+<div class="section" style="display:flex;justify-content:space-between;align-items:center;">
 <span>Include Installation</span>
 <label class="switch">
 <input type="checkbox" name="install">
@@ -133,25 +221,28 @@ function selectProduct(code, el){
 </label>
 </div>
 
-<h3>Customer</h3>
+<div class="section">
 <input name="customer" placeholder="Customer Name">
-<input name="project" placeholder="Project">
+<input name="project" placeholder="Project Reference">
 <textarea name="address" placeholder="Site Address"></textarea>
+</div>
 
 <button type="submit">Calculate & Generate Quote</button>
 
 </form>
 
 {% if result %}
-<div class="result">
+<hr>
 
-<h3>Calculation</h3>
+<h3>Calculation Summary</h3>
+
 <p>Total Area: {{result.total_area}} m²</p>
-<p>Corner Area Deduction: {{result.corner_area}} m²</p>
+<p>Corner Area: {{result.corner_area}} m²</p>
 <p>Net Area: {{result.net_area}} m²</p>
 <p>With Wastage: {{result.area_waste}} m²</p>
 
 <h3>Costs</h3>
+
 <p>Body: ${{result.body_total}}</p>
 <p>Corner: ${{result.corner_total}}</p>
 
@@ -160,19 +251,15 @@ function selectProduct(code, el){
 <p>Installation Corner: ${{result.install_corner}}</p>
 {% endif %}
 
-<hr>
-<p>Subtotal: ${{result.subtotal}}</p>
-<p>GST: ${{result.gst}}</p>
 <h2>Total (Inc GST): ${{result.total}}</h2>
 
 <form method="post" action="/pdf">
 {% for k,v in result.items() %}
 <input type="hidden" name="{{k}}" value="{{v}}">
 {% endfor %}
-<button>Download Quote PDF</button>
+<button>Download Quote (PDF)</button>
 </form>
 
-</div>
 {% endif %}
 
 </div>
