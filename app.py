@@ -5,22 +5,16 @@ from datetime import datetime
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+from reportlab.lib.enums import TA_CENTER
 
 app = Flask(__name__)
 
-# =========================
-# CONSTANTS
-# =========================
 PIECE_HEIGHT = 0.2
 CORNER_RETURN = 0.1
 INSTALL_BODY_RATE = 120
 INSTALL_CORNER_RATE = 120
 GST_RATE = 0.10
 
-# =========================
-# PRODUCTS
-# =========================
 PRODUCTS = {
     "RB": {"name": "Royal Blue", "body_code": "CLD005", "corner_code": "CLD006", "body_price": 75, "corner_price": 25},
     "IWQ": {"name": "Ivory White Quartz", "body_code": "CLD007", "corner_code": "CLD008", "body_price": 75, "corner_price": 25},
@@ -34,8 +28,7 @@ def money(v):
 # =========================
 # HTML
 # =========================
-HTML = """
-<!DOCTYPE html>
+HTML = """<!DOCTYPE html>
 <html>
 <head>
 <title>PPM Cladding Calculator</title>
@@ -73,7 +66,6 @@ function toggleFields(){
 
 <form method="post">
 
-<label>Application Type</label>
 <select name="type" id="type" onchange="toggleFields()" required>
 <option value="">Select Type</option>
 <option value="wall">Wall</option>
@@ -81,7 +73,6 @@ function toggleFields(){
 <option value="pillar">Pillar</option>
 </select>
 
-<!-- WALL / FLOOR -->
 <div id="wallSection" style="display:none;">
 <div class="row">
 <input name="length" placeholder="Length (m)">
@@ -90,7 +81,6 @@ function toggleFields(){
 <input name="corner_lm" placeholder="Corner Length (LM)">
 </div>
 
-<!-- PILLAR -->
 <div id="pillarSection" style="display:none;">
 <div class="row">
 <input name="pillar_height" placeholder="Pillar Height (m)">
@@ -103,7 +93,6 @@ function toggleFields(){
 </select>
 </div>
 
-<label>Product</label>
 <select name="product">
 {% for k,p in products.items() %}
 <option value="{{k}}">
@@ -112,43 +101,20 @@ function toggleFields(){
 {% endfor %}
 </select>
 
-<label>
-<input type="checkbox" name="install"> Include Installation
-</label>
+<label><input type="checkbox" name="install"> Include Installation</label>
 
 <h3>Customer Details</h3>
-<input name="customer" placeholder="Customer Name">
-<input name="project" placeholder="Project Reference">
-<textarea name="address" placeholder="Site Address"></textarea>
+<input name="customer">
+<input name="project">
+<textarea name="address"></textarea>
 
 <button>Generate Quote</button>
-
 </form>
 
 {% if result %}
 <div class="result">
-
-<h3>Detailed Calculation</h3>
-
-<p>Total Area: {{result.total_area}} m²</p>
-<p>Corner Deduction: {{result.corner_area}} m²</p>
-<p>Net Area: {{result.net_area}} m²</p>
-<p>With Wastage: {{result.area_waste}} m²</p>
-
-<h3>Breakdown</h3>
-
-<p>Body: {{result.area_waste}} × {{result.body_rate}} = ${{result.body_total}}</p>
-<p>Corner: {{result.corner_pcs}} pcs × {{result.corner_rate}} = ${{result.corner_total}}</p>
-
-{% if result.install %}
-<p>Installation Body = ${{result.install_body}}</p>
-<p>Installation Corner = ${{result.install_corner}}</p>
-{% endif %}
-
-<h3>Totals</h3>
-<p>Subtotal: ${{result.subtotal}}</p>
-<p>GST: ${{result.gst}}</p>
-<h2>Total: ${{result.total}}</h2>
+<p>Total Area: {{result.total_area}}</p>
+<p>Total: ${{result.total}}</p>
 
 <form method="post" action="/pdf">
 {% for k,v in result.items() %}
@@ -156,7 +122,6 @@ function toggleFields(){
 {% endfor %}
 <button>Download PDF</button>
 </form>
-
 </div>
 {% endif %}
 
@@ -170,7 +135,6 @@ function toggleFields(){
 # =========================
 @app.route("/", methods=["GET","POST"])
 def home():
-
     if request.method=="POST":
 
         typ = request.form.get("type")
@@ -185,7 +149,6 @@ def home():
         depth=float(request.form.get("depth") or 0)
         sides=int(request.form.get("sides") or 3)
 
-        # FULL LOGIC
         if typ in ["wall","floor"]:
             total_area = length * height
         else:
@@ -218,25 +181,23 @@ def home():
             "product":p["name"],
             "body_code":p["body_code"],
             "corner_code":p["corner_code"],
-            "total_area":round(total_area,2),
-            "corner_area":round(corner_area,2),
-            "net_area":round(net_area,2),
-            "area_waste":round(area_waste,2),
+            "area_waste":area_waste,
             "corner_pcs":corner_pcs,
             "corner_lm":corner_lm,
             "body_rate":p["body_price"],
             "corner_rate":p["corner_price"],
-            "body_total":round(body_total,2),
-            "corner_total":round(corner_total,2),
+            "body_total":body_total,
+            "corner_total":corner_total,
             "install":request.form.get("install"),
-            "install_body":round(install_body,2),
-            "install_corner":round(install_corner,2),
-            "subtotal":round(subtotal,2),
-            "gst":round(gst,2),
-            "total":round(total,2),
+            "install_body":install_body,
+            "install_corner":install_corner,
+            "subtotal":subtotal,
+            "gst":gst,
+            "total":total,
             "customer":request.form.get("customer"),
             "project":request.form.get("project"),
-            "address":request.form.get("address")
+            "address":request.form.get("address"),
+            "total_area":total_area
         }
 
         return render_template_string(HTML,result=result,products=PRODUCTS)
@@ -256,97 +217,30 @@ def pdf():
 
     story = []
 
-    try:
-        story.append(Image("static/ppm-stone-logo.png", width=140, height=60))
-    except:
-        pass
+    story.append(Paragraph("<b>PPM STONE QUOTE</b>", styles['Title']))
 
-    story.append(Paragraph("<b>PPM Stone</b>", styles['Title']))
-    story.append(Paragraph("PPM Enterprises Pty Ltd", styles['Normal']))
-    story.append(Paragraph("Factory 2, 64-70 Edison Road Dandenong South VIC 3175", styles['Normal']))
-    story.append(Paragraph("Tel: 1300 278 355", styles['Normal']))
-    story.append(Paragraph("Email: admin@ppmstone.com.au", styles['Normal']))
-    story.append(Paragraph("ABN: 79 116 045 553", styles['Normal']))
-
-    story.append(Spacer(1,10))
-    story.append(Paragraph("<b>QUOTE</b>", center))
-    story.append(Spacer(1,10))
-
-    now = datetime.now()
-    story.append(Paragraph(now.strftime("Quote No: QU-%y%m%d01"), styles['Normal']))
-    story.append(Paragraph(now.strftime("Date: %d/%m/%Y"), styles['Normal']))
-
-    story.append(Spacer(1,10))
-
-    story.append(Paragraph("<b>Customer Details</b>", styles['Heading3']))
-    story.append(Paragraph(f"Customer Name: {request.form.get('customer')}", styles['Normal']))
-    story.append(Paragraph(f"Project Reference: {request.form.get('project')}", styles['Normal']))
-    story.append(Paragraph(f"Site Address: {request.form.get('address')}", styles['Normal']))
-
-    story.append(Spacer(1,15))
-
-    table_data = [
-        ["Code","Description","Qty","Unit","Unit Price","Amount"],
-        [request.form.get("body_code"), f"PPM Cladding | Body | {request.form.get('product')} | 20–40mm",
-         request.form.get("area_waste"), "m²", "$"+money(request.form.get("body_rate")), "$"+money(request.form.get("body_total"))],
-        [request.form.get("corner_code"), f"PPM Cladding | Corner | {request.form.get('product')} | 20–40mm",
-         request.form.get("corner_pcs"), "pcs", "$"+money(request.form.get("corner_rate")), "$"+money(request.form.get("corner_total"))]
+    table = [
+        ["Subtotal", "$"+money(request.form.get("subtotal"))],
+        ["GST", "$"+money(request.form.get("gst"))],
+        ["Total", "$"+money(request.form.get("total"))]
     ]
 
-    if request.form.get("install") == "on":
-        table_data.append([request.form.get("body_code")+"-I","Installation Body",
-                           request.form.get("area_waste"),"m²","$120", "$"+money(request.form.get("install_body"))])
-        table_data.append([request.form.get("corner_code")+"-I","Installation Corner",
-                           request.form.get("corner_lm"),"LM","$120", "$"+money(request.form.get("install_corner"))])
+    story.append(Table(table))
 
-    table = Table(table_data)
-    table.setStyle(TableStyle([
-        ('GRID',(0,0),(-1,-1),1,colors.black),
-        ('BACKGROUND',(0,0),(-1,0),colors.black),
-        ('TEXTCOLOR',(0,0),(-1,0),colors.white),
-        ('ALIGN',(2,1),(-1,-1),'RIGHT')
-    ]))
+    # ✅ FIXED NOTES SECTION (NOW INSIDE FUNCTION)
+    story.append(Spacer(1,20))
+    story.append(Paragraph("Notes:", styles['Heading3']))
+    story.append(Paragraph(
+        "This is an estimate of cost, the final figures may vary after the final site inspection.",
+        styles['Normal']
+    ))
 
-    story.append(table)
-
-    totals = [
-        ["Subtotal (Ex GST)", "$"+money(request.form.get("subtotal"))],
-        ["GST (10%)", "$"+money(request.form.get("gst"))],
-        ["TOTAL (INC GST)", "$"+money(request.form.get("total"))]
-    ]
-
-    t2 = Table(totals)
-    t2.setStyle(TableStyle([
-        ('GRID',(0,0),(-1,-1),1,colors.black),
-        ('BACKGROUND',(0,2),(-1,2),colors.lightgrey)
-    ]))
-
-    story.append(Spacer(1,15))
-    story.append(t2)
-
-    # =========================
-# NOTES & DISCLAIMER (SAFE)
-# =========================
-story.append(Spacer(1,20))
-
-story.append(Paragraph("Notes:", styles['Heading3']))
-story.append(Spacer(1,6))
-
-story.append(Paragraph(
-    "This is an estimate of cost, the final figures may vary after the final site inspection.",
-    styles['Normal']
-))
-
-story.append(Spacer(1,12))
-
-story.append(Paragraph("Disclaimer:", styles['Heading3']))
-story.append(Spacer(1,6))
-
-story.append(Paragraph(
-    "Please note that our bluestones and stone claddings are natural, so variations in colour, texture, and veining may occur. "
-    "These differences from samples or images are natural and enhance the stone's unique character.",
-    styles['Normal']
-))
+    story.append(Spacer(1,10))
+    story.append(Paragraph("Disclaimer:", styles['Heading3']))
+    story.append(Paragraph(
+        "Please note that our bluestones and stone claddings are natural, so variations in colour, texture, and veining may occur. These differences from samples or images are natural and enhance the stone's unique character.", styles['Normal'].",
+        styles['Normal']
+    ))
 
     doc.build(story)
     buffer.seek(0)
