@@ -5,7 +5,7 @@ from datetime import datetime
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 
 app = Flask(__name__)
 
@@ -31,182 +31,97 @@ PRODUCTS = {
 def money(v): return "{:.2f}".format(float(v))
 
 # =========================
-# HTML (MOBILE READY)
+# HTML (DETAILED OUTPUT)
 # =========================
 HTML = """
 <!DOCTYPE html>
 <html>
 <head>
 <title>PPM Cladding Calculator</title>
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/static/favicon.ico">
 
 <style>
-body {font-family: Arial; background:#f4f6f8; margin:0;}
-.container {max-width:900px;margin:auto;background:white;padding:20px;}
-
-h2 {font-size:22px;}
-
-.section {margin-top:20px;}
-
-input, select, textarea {
-    width:100%;
-    padding:14px;
-    margin-top:8px;
-    border:1px solid #ccc;
-    border-radius:8px;
-    font-size:16px;
-}
-
-.row {display:flex; gap:10px;}
-
-@media (max-width:768px){
-    .row {flex-direction:column;}
-}
-
-button {
-    width:100%;
-    padding:16px;
-    margin-top:20px;
-    background:black;
-    color:white;
-    border:none;
-    border-radius:8px;
-    font-size:18px;
-}
-
-.hidden {display:none;}
-
-.switch {position:relative;width:52px;height:28px;}
-.switch input {display:none;}
-.slider {
-    position:absolute;top:0;left:0;right:0;bottom:0;
-    background:#ccc;border-radius:28px;
-}
-.slider:before {
-    content:"";position:absolute;
-    width:22px;height:22px;
-    left:3px;bottom:3px;
-    background:white;border-radius:50%;
-    transition:0.3s;
-}
-input:checked + .slider {background:black;}
-input:checked + .slider:before {transform:translateX(24px);}
-
-.result {
-    margin-top:20px;
-    padding:15px;
-    background:#f9fafb;
-    border-radius:8px;
-}
+body {font-family: Arial; background:#f4f6f8;}
+.container {max-width:900px;margin:auto;background:white;padding:20px;border-radius:10px;}
+input, select {width:100%;padding:12px;margin-top:8px;}
+button {width:100%;padding:14px;margin-top:20px;background:black;color:white;}
+.result {background:#f9fafb;padding:15px;margin-top:20px;border-radius:8px;}
 </style>
 
 <script>
 function toggleFields(){
-    let type = document.getElementById("type").value;
-
-    document.getElementById("wallSection").style.display =
-        (type === "wall" || type === "floor") ? "block" : "none";
-
-    document.getElementById("pillarSection").style.display =
-        (type === "pillar") ? "block" : "none";
+ let t=document.getElementById("type").value;
+ document.getElementById("wall").style.display=(t=="wall")?"block":"none";
 }
 </script>
 
 </head>
 
 <body>
-
 <div class="container">
 
 <h2>PPM Cladding Calculator</h2>
 
 <form method="post">
 
-<div class="section">
-<label>Application Type</label>
 <select name="type" id="type" onchange="toggleFields()" required>
-<option value="">-- Select --</option>
+<option value="">Select Type</option>
 <option value="wall">Wall</option>
-<option value="floor">Floor</option>
-<option value="pillar">Pillar</option>
 </select>
-</div>
 
-<div id="wallSection" class="section hidden">
-<h3>Wall / Floor Inputs</h3>
-<div class="row">
+<div id="wall" style="display:none;">
 <input name="length" placeholder="Length (m)">
-<input name="height" placeholder="Height / Width (m)">
-</div>
-<input name="corner_lm" placeholder="Corner Length (LM)">
-</div>
-
-<div id="pillarSection" class="section hidden">
-<h3>Pillar Inputs</h3>
-<div class="row">
-<input name="pillar_height" placeholder="Pillar Height (m)">
-<input name="front" placeholder="Front Width (m)">
-</div>
-<input name="depth" placeholder="Return Depth (m)">
-<select name="sides">
-<option value="3">3 Sides</option>
-<option value="4">4 Sides</option>
-</select>
+<input name="height" placeholder="Height (m)">
+<input name="corner_lm" placeholder="Corner LM">
 </div>
 
-<div class="section">
-<label>Product</label>
 <select name="product">
 {% for k,p in products.items() %}
-<option value="{{k}}">{{p.name}} ({{p.body_code}} / {{p.corner_code}})</option>
+<option value="{{k}}">
+{{p.name}} ({{p.body_code}} / {{p.corner_code}})
+</option>
 {% endfor %}
 </select>
-</div>
 
-<div class="section" style="display:flex;justify-content:space-between;align-items:center;">
-<span>Include Installation</span>
-<label class="switch">
-<input type="checkbox" name="install">
-<span class="slider"></span>
+<label>
+<input type="checkbox" name="install"> Include Installation
 </label>
-</div>
 
-<div class="section">
-<input name="customer" placeholder="Customer Name">
-<input name="project" placeholder="Project Reference">
-<textarea name="address" placeholder="Site Address"></textarea>
-</div>
-
-<button type="submit">Calculate & Generate Quote</button>
+<button>Generate Quote</button>
 
 </form>
 
 {% if result %}
 <div class="result">
 
-<h3>Calculation</h3>
+<h3>Detailed Calculation</h3>
+
 <p>Total Area: {{result.total_area}} m²</p>
-<p>Corner Area: {{result.corner_area}} m²</p>
+<p>Corner Deduction: {{result.corner_area}} m²</p>
 <p>Net Area: {{result.net_area}} m²</p>
 <p>With Wastage: {{result.area_waste}} m²</p>
 
-<h3>Costs</h3>
-<p>Body: ${{result.body_total}}</p>
-<p>Corner: ${{result.corner_total}}</p>
+<h3>Breakdown</h3>
+
+<p>Body: {{result.area_waste}} × {{result.body_rate}} = ${{result.body_total}}</p>
+<p>Corner: {{result.corner_pcs}} pcs × {{result.corner_rate}} = ${{result.corner_total}}</p>
 
 {% if result.install %}
-<p>Installation Body: ${{result.install_body}}</p>
-<p>Installation Corner: ${{result.install_corner}}</p>
+<p>Installation Body = ${{result.install_body}}</p>
+<p>Installation Corner = ${{result.install_corner}}</p>
 {% endif %}
 
-<h2>Total (Inc GST): ${{result.total}}</h2>
+<h3>Totals</h3>
+<p>Subtotal: ${{result.subtotal}}</p>
+<p>GST: ${{result.gst}}</p>
+<h2>Total: ${{result.total}}</h2>
 
 <form method="post" action="/pdf">
 {% for k,v in result.items() %}
 <input type="hidden" name="{{k}}" value="{{v}}">
 {% endfor %}
-<button>Download Quote PDF</button>
+<button>Download PDF</button>
 </form>
 
 </div>
@@ -218,110 +133,217 @@ function toggleFields(){
 """
 
 # =========================
-# MAIN LOGIC
+# MAIN
 # =========================
 @app.route("/", methods=["GET","POST"])
 def home():
 
-    if request.method == "POST":
+    if request.method=="POST":
 
-        typ = request.form.get("type")
-        p = PRODUCTS.get(request.form.get("product"))
+        p=PRODUCTS[request.form.get("product")]
 
         length=float(request.form.get("length") or 0)
         height=float(request.form.get("height") or 0)
         corner_lm=float(request.form.get("corner_lm") or 0)
 
-        ph=float(request.form.get("pillar_height") or 0)
-        front=float(request.form.get("front") or 0)
-        depth=float(request.form.get("depth") or 0)
-        sides=int(request.form.get("sides") or 3)
+        total_area=length*height
+        corner_area=corner_lm*(2*CORNER_RETURN)
+        net_area=max(total_area-corner_area,0)
+        area_waste=net_area*1.1
 
-        if typ in ["wall","floor"]:
-            area = length * height
-        else:
-            if sides == 4:
-                area = ph*(2*front + 2*depth)
-                corner_lm = ph*4
-            else:
-                area = ph*(front + 2*depth)
-                corner_lm = ph*2
+        corner_pcs=math.ceil(corner_lm/PIECE_HEIGHT)
 
-        total_area = area
-        corner_area = corner_lm*(2*CORNER_RETURN)
-        net_area = max(total_area - corner_area, 0)
-        area_waste = net_area * 1.1
+        body_total=area_waste*p["body_price"]
+        corner_total=corner_pcs*p["corner_price"]
 
-        corner_pcs = math.ceil(corner_lm / PIECE_HEIGHT)
-
-        body_total = area_waste * p["body_price"]
-        corner_total = corner_pcs * p["corner_price"]
-
-        install_body = install_corner = 0
+        install_body=install_corner=0
         if request.form.get("install"):
-            install_body = area_waste * INSTALL_BODY_RATE
-            install_corner = corner_lm * INSTALL_CORNER_RATE
+            install_body=area_waste*INSTALL_BODY_RATE
+            install_corner=corner_lm*INSTALL_CORNER_RATE
 
-        subtotal = body_total + corner_total + install_body + install_corner
-        gst = subtotal * GST_RATE
-        total = subtotal + gst
+        subtotal=body_total+corner_total+install_body+install_corner
+        gst=subtotal*GST_RATE
+        total=subtotal+gst
 
-        result = {
-            "total_area": round(total_area,2),
-            "corner_area": round(corner_area,2),
-            "net_area": round(net_area,2),
-            "area_waste": round(area_waste,2),
-            "body_total": round(body_total,2),
-            "corner_total": round(corner_total,2),
-            "install": request.form.get("install"),
-            "install_body": round(install_body,2),
-            "install_corner": round(install_corner,2),
-            "subtotal": round(subtotal,2),
-            "gst": round(gst,2),
-            "total": round(total,2)
+        result={
+            "product":p["name"],
+            "body_code":p["body_code"],
+            "corner_code":p["corner_code"],
+            "total_area":round(total_area,2),
+            "corner_area":round(corner_area,2),
+            "net_area":round(net_area,2),
+            "area_waste":round(area_waste,2),
+            "corner_pcs":corner_pcs,
+            "corner_lm":corner_lm,
+            "body_rate":p["body_price"],
+            "corner_rate":p["corner_price"],
+            "body_total":round(body_total,2),
+            "corner_total":round(corner_total,2),
+            "install":request.form.get("install"),
+            "install_body":round(install_body,2),
+            "install_corner":round(install_corner,2),
+            "subtotal":round(subtotal,2),
+            "gst":round(gst,2),
+            "total":round(total,2)
         }
 
-        return render_template_string(HTML, result=result, products=PRODUCTS)
+        return render_template_string(HTML,result=result,products=PRODUCTS)
 
-    return render_template_string(HTML, result=None, products=PRODUCTS)
+    return render_template_string(HTML,result=None,products=PRODUCTS)
 
 # =========================
-# PDF (PREMIUM)
+# PDF (FULL PREMIUM)
 # =========================
 @app.route("/pdf", methods=["POST"])
 def pdf():
 
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer)
+
     styles = getSampleStyleSheet()
-    center = ParagraphStyle(name='c', alignment=TA_CENTER)
+    center = ParagraphStyle(name='center', alignment=TA_CENTER)
+    right = ParagraphStyle(name='right', alignment=TA_RIGHT)
 
     story = []
 
+    # =========================
+    # LOGO
+    # =========================
     try:
-        story.append(Image("static/ppm-stone-logo.png", width=140, height=60))
+        story.append(Image("static/ppm-stone-logo.png", width=150, height=60))
     except:
         pass
 
-    story.append(Paragraph("<b>PPM STONE</b>", styles['Title']))
-    story.append(Paragraph("QUOTE", center))
+    # =========================
+    # COMPANY HEADER
+    # =========================
+    story.append(Paragraph("<b>PPM Stone</b>", styles['Title']))
+    story.append(Paragraph("PPM Enterprises Pty Ltd", styles['Normal']))
+    story.append(Paragraph("Factory 2, 64-70 Edison Road Dandenong South VIC 3175", styles['Normal']))
+    story.append(Paragraph("Tel: 1300 278 355", styles['Normal']))
+    story.append(Paragraph("Email: admin@ppmstone.com.au", styles['Normal']))
+    story.append(Paragraph("ABN: 79 116 045 553", styles['Normal']))
+
+    story.append(Spacer(1,10))
+    story.append(Paragraph("<b>QUOTE</b>", center))
     story.append(Spacer(1,10))
 
-    table = [
-        ["Item","Amount"],
-        ["Body", "$"+money(request.form.get("body_total"))],
-        ["Corner", "$"+money(request.form.get("corner_total"))],
-        ["Total", "$"+money(request.form.get("total"))],
+    # =========================
+    # QUOTE INFO
+    # =========================
+    now = datetime.now()
+    story.append(Paragraph(now.strftime("Quote No: QU-%y%m%d01"), styles['Normal']))
+    story.append(Paragraph(now.strftime("Date: %d/%m/%Y"), styles['Normal']))
+
+    story.append(Spacer(1,10))
+
+    # =========================
+    # CUSTOMER DETAILS
+    # =========================
+    story.append(Paragraph("<b>Customer Details</b>", styles['Heading3']))
+    story.append(Paragraph(f"Customer Name: {request.form.get('customer')}", styles['Normal']))
+    story.append(Paragraph(f"Project Reference: {request.form.get('project')}", styles['Normal']))
+    story.append(Paragraph(f"Site Address: {request.form.get('address')}", styles['Normal']))
+
+    story.append(Spacer(1,15))
+
+    # =========================
+    # PRODUCT TABLE
+    # =========================
+    table_data = [
+        ["Code", "Description", "Qty", "Unit", "Unit Price", "Amount"],
+
+        [
+            request.form.get("body_code"),
+            f"PPM Cladding | Body | {request.form.get('product')} | 20–40mm",
+            request.form.get("area_waste"),
+            "m²",
+            "$"+money(request.form.get("body_rate")),
+            "$"+money(request.form.get("body_total"))
+        ],
+
+        [
+            request.form.get("corner_code"),
+            f"PPM Cladding | Corner | {request.form.get('product')} | 20–40mm",
+            request.form.get("corner_pcs"),
+            "pcs",
+            "$"+money(request.form.get("corner_rate")),
+            "$"+money(request.form.get("corner_total"))
+        ]
     ]
 
-    t = Table(table)
-    t.setStyle(TableStyle([
-        ('GRID',(0,0),(-1,-1),1,colors.black),
-        ('BACKGROUND',(0,0),(-1,0),colors.grey)
+    # INSTALLATION
+    if request.form.get("install") == "on":
+        table_data.append([
+            request.form.get("body_code")+"-I",
+            "Installation - Body",
+            request.form.get("area_waste"),
+            "m²",
+            "$120",
+            "$"+money(request.form.get("install_body"))
+        ])
+
+        table_data.append([
+            request.form.get("corner_code")+"-I",
+            "Installation - Corner",
+            request.form.get("corner_lm"),
+            "LM",
+            "$120",
+            "$"+money(request.form.get("install_corner"))
+        ])
+
+    table = Table(table_data, colWidths=[70,200,60,50,80,80])
+
+    table.setStyle(TableStyle([
+        ('GRID',(0,0),(-1,-1),0.8,colors.black),
+        ('BACKGROUND',(0,0),(-1,0),colors.black),
+        ('TEXTCOLOR',(0,0),(-1,0),colors.white),
+        ('ALIGN',(2,1),(-1,-1),'RIGHT')
     ]))
 
-    story.append(t)
+    story.append(table)
 
+    # =========================
+    # TOTALS TABLE
+    # =========================
+    totals = [
+        ["Subtotal (Ex GST)", "$"+money(request.form.get("subtotal"))],
+        ["GST (10%)", "$"+money(request.form.get("gst"))],
+        ["TOTAL (INC GST)", "$"+money(request.form.get("total"))]
+    ]
+
+    totals_table = Table(totals, colWidths=[300,120])
+
+    totals_table.setStyle(TableStyle([
+        ('GRID',(0,0),(-1,-1),0.8,colors.black),
+        ('ALIGN',(1,0),(1,-1),'RIGHT'),
+        ('FONTNAME',(0,2),(-1,2),'Helvetica-Bold'),
+        ('BACKGROUND',(0,2),(-1,2),colors.lightgrey)
+    ]))
+
+    story.append(Spacer(1,15))
+    story.append(totals_table)
+
+    # =========================
+    # NOTES & DISCLAIMER
+    # =========================
+    story.append(Spacer(1,20))
+
+    story.append(Paragraph(
+        "<b>Notes:</b> This is an estimate of cost, the final figures may vary after the final site inspection.",
+        styles['Normal']
+    ))
+
+    story.append(Spacer(1,8))
+
+    story.append(Paragraph(
+        "<b>Disclaimer:</b> Please note that our bluestones and stone claddings are natural, so variations in colour, texture, and veining may occur. These differences from samples or images are natural and enhance the stone's unique character.",
+        styles['Normal']
+    ))
+
+    # =========================
+    # BUILD PDF
+    # =========================
     doc.build(story)
     buffer.seek(0)
 
@@ -330,6 +352,6 @@ def pdf():
 # =========================
 # RUN
 # =========================
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+if __name__=="__main__":
+    port=int(os.environ.get("PORT",5000))
+    app.run(host="0.0.0.0",port=port)
