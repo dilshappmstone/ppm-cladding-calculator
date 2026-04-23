@@ -274,12 +274,24 @@ def pdf():
 
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer)
+
     styles = getSampleStyleSheet()
-    center = ParagraphStyle(name='c', alignment=TA_CENTER)
+    center = ParagraphStyle(name='center', alignment=TA_CENTER)
+    right = ParagraphStyle(name='right', alignment=2)
 
     story = []
 
+    # =========================
+    # LOGO (FIXED PATH)
+    # =========================
+    try:
+        story.append(Image("static/ppm-stone-logo.png", width=140, height=60))
+    except:
+        pass
+
+    # =========================
     # HEADER
+    # =========================
     story.append(Paragraph("<b>PPM Stone</b>", styles['Title']))
     story.append(Paragraph("PPM Enterprises Pty Ltd", styles['Normal']))
     story.append(Paragraph("Factory 2, 64-70 Edison Road Dandenong South VIC 3175", styles['Normal']))
@@ -291,13 +303,18 @@ def pdf():
     story.append(Paragraph("<b>QUOTE</b>", center))
     story.append(Spacer(1,10))
 
+    # =========================
+    # QUOTE INFO
+    # =========================
     now = datetime.now()
     story.append(Paragraph(now.strftime("Quote No: QU-%y%m%d01"), styles['Normal']))
     story.append(Paragraph(now.strftime("Date: %d/%m/%Y"), styles['Normal']))
 
     story.append(Spacer(1,10))
 
-    # CUSTOMER
+    # =========================
+    # CUSTOMER DETAILS
+    # =========================
     story.append(Paragraph("<b>Customer Details</b>", styles['Heading3']))
     story.append(Paragraph(f"Customer Name: {request.form.get('customer')}", styles['Normal']))
     story.append(Paragraph(f"Project Reference: {request.form.get('project')}", styles['Normal']))
@@ -305,53 +322,118 @@ def pdf():
 
     story.append(Spacer(1,15))
 
-    # PRODUCT TABLE
-    table = [
-        ["Description","Qty","Unit Price","Amount"],
-        ["Body Supply", request.form.get("area_waste"), request.form.get("body_rate"), request.form.get("body_total")],
-        ["Corner Supply", request.form.get("corner_pcs"), request.form.get("corner_rate"), request.form.get("corner_total")]
+    # =========================
+    # PRODUCT INFO
+    # =========================
+    product_name = request.form.get("product")
+    body_code = request.form.get("body_code")
+    corner_code = request.form.get("corner_code")
+
+    # =========================
+    # MAIN TABLE
+    # =========================
+    table_data = [
+        ["Code", "Description", "Qty", "Unit", "Unit Price ($)", "Amount ($)"],
+
+        [
+            body_code,
+            f"PPM Cladding | Body | {product_name} | Irregular 20–40mm",
+            request.form.get("area_waste"),
+            "m²",
+            money(request.form.get("body_rate")),
+            money(request.form.get("body_total"))
+        ],
+
+        [
+            corner_code,
+            f"PPM Cladding | Corner | {product_name} | Irregular 20–40mm",
+            request.form.get("corner_pcs"),
+            "pcs",
+            money(request.form.get("corner_rate")),
+            money(request.form.get("corner_total"))
+        ]
     ]
 
+    # INSTALLATION
     if request.form.get("install") == "on":
-        table.append(["Installation Body","-", "120", request.form.get("install_body")])
-        table.append(["Installation Corner","-", "120", request.form.get("install_corner")])
+        table_data.append([
+            body_code + "-I",
+            "Installation - Body",
+            request.form.get("area_waste"),
+            "m²",
+            "120.00",
+            money(request.form.get("install_body"))
+        ])
 
-    t = Table(table)
-    t.setStyle(TableStyle([
-        ('GRID',(0,0),(-1,-1),1,colors.black),
-        ('BACKGROUND',(0,0),(-1,0),colors.grey)
+        table_data.append([
+            corner_code + "-I",
+            "Installation - Corner",
+            request.form.get("corner_lm"),
+            "LM",
+            "120.00",
+            money(request.form.get("install_corner"))
+        ])
+
+    table = Table(table_data, colWidths=[70,180,60,50,80,80])
+
+    table.setStyle(TableStyle([
+        ('GRID',(0,0),(-1,-1),0.8,colors.black),
+        ('BACKGROUND',(0,0),(-1,0),colors.black),
+        ('TEXTCOLOR',(0,0),(-1,0),colors.white),
+        ('FONTNAME',(0,0),(-1,0),'Helvetica-Bold'),
+
+        ('ALIGN',(2,1),(-1,-1),'RIGHT'),
+        ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
+
+        ('BOTTOMPADDING',(0,0),(-1,0),10),
+        ('TOPPADDING',(0,0),(-1,0),10),
     ]))
 
-    story.append(t)
+    story.append(table)
 
-    # TOTALS
-    subtotal = float(request.form.get("body_total",0)) + float(request.form.get("corner_total",0))
-    if request.form.get("install") == "on":
-        subtotal += float(request.form.get("install_body",0)) + float(request.form.get("install_corner",0))
+    # =========================
+    # TOTALS TABLE
+    # =========================
+    subtotal = float(request.form.get("subtotal"))
+    gst = float(request.form.get("gst"))
+    total = float(request.form.get("total"))
 
-    gst = subtotal * 0.10
-    total = subtotal + gst
-
-    totals = [
+    totals_table = Table([
         ["Subtotal (Ex GST)", "$"+money(subtotal)],
         ["GST (10%)", "$"+money(gst)],
-        ["Total (Inc GST)", "$"+money(total)]
-    ]
+        ["TOTAL (INC GST)", "$"+money(total)]
+    ], colWidths=[300,100])
 
-    t2 = Table(totals)
-    t2.setStyle(TableStyle([
-        ('GRID',(0,0),(-1,-1),1,colors.black),
+    totals_table.setStyle(TableStyle([
+        ('GRID',(0,0),(-1,-1),0.8,colors.black),
+        ('ALIGN',(1,0),(1,-1),'RIGHT'),
+        ('FONTNAME',(0,2),(-1,2),'Helvetica-Bold'),
         ('BACKGROUND',(0,2),(-1,2),colors.lightgrey)
     ]))
 
     story.append(Spacer(1,15))
-    story.append(t2)
+    story.append(totals_table)
 
-    # NOTES
-    story.append(Spacer(1,15))
-    story.append(Paragraph("<b>Notes:</b> This is an estimate only. Final figures may vary.", styles['Normal']))
-    story.append(Paragraph("<b>Disclaimer:</b> Natural stone variations may occur.", styles['Normal']))
+    # =========================
+    # NOTES + DISCLAIMER
+    # =========================
+    story.append(Spacer(1,20))
 
+    story.append(Paragraph(
+        "<b>Notes:</b> This is an estimate of cost, the final figures may vary after the final site inspection.",
+        styles['Normal']
+    ))
+
+    story.append(Spacer(1,8))
+
+    story.append(Paragraph(
+        "<b>Disclaimer:</b> Please note that our bluestones and stone claddings are natural, so variations in colour, texture, and veining may occur. These differences from samples or images are natural and enhance the stone's unique character.",
+        styles['Normal']
+    ))
+
+    # =========================
+    # BUILD PDF
+    # =========================
     doc.build(story)
     buffer.seek(0)
 
