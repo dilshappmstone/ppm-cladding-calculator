@@ -1,19 +1,16 @@
+# =========================
+# IMPORTS
+# =========================
 from flask import Flask, request, render_template_string, send_file
 import math, io, os
 from datetime import datetime
 
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+from reportlab.lib.enums import TA_CENTER
 
-from flask import send_from_directory
-
-@app.route('/static/<path:filename>')
-def static_files(filename):
-    return send_from_directory('static', filename)
-
-app = Flask(__name__, static_folder='static', static_url_path='/static')
+app = Flask(__name__)
 
 # =========================
 # CONSTANTS
@@ -34,10 +31,11 @@ PRODUCTS = {
     "CC": {"name": "Country Cross", "body_code": "CLD011", "corner_code": "CLD012", "body_price": 75, "corner_price": 25}
 }
 
-def money(v): return "{:.2f}".format(float(v))
+def money(v):
+    return "{:.2f}".format(float(v))
 
 # =========================
-# HTML (UPDATED UI)
+# HTML
 # =========================
 HTML = """
 <!DOCTYPE html>
@@ -46,95 +44,38 @@ HTML = """
 <title>PPM Cladding Calculator</title>
 
 <style>
-body {
-    font-family: Arial;
-    background:#f4f6f8;
-}
+body {font-family: Arial; background:#f4f6f8;}
+.container {max-width:900px;margin:auto;background:white;padding:30px;border-radius:10px;}
 
-.container {
-    max-width:900px;
-    margin:auto;
-    background:white;
-    padding:30px;
-    border-radius:10px;
-}
-
-.header {
-    display:flex;
-    align-items:center;
-    gap:10px;
-}
-
-.header img {
-    height:50px;
-}
-
-.section {
-    margin-top:25px;
-}
-
+.section {margin-top:20px;}
 input, select, textarea {
-    width:100%;
-    padding:10px;
-    margin-top:8px;
-    border:1px solid #ccc;
-    border-radius:6px;
+    width:100%; padding:10px; margin-top:8px;
+    border:1px solid #ccc; border-radius:6px;
 }
 
-.row {
-    display:flex;
-    gap:10px;
-}
-
-.row input {
-    flex:1;
-}
-
-.hidden {
-    display:none;
-}
+.row {display:flex; gap:10px;}
+.row input {flex:1;}
 
 button {
-    width:100%;
-    padding:14px;
-    margin-top:20px;
-    background:black;
-    color:white;
-    border:none;
-    border-radius:6px;
+    width:100%; padding:14px; margin-top:20px;
+    background:black; color:white; border:none;
 }
 
-.switch {
-    position:relative;
-    width:50px;
-    height:25px;
-}
+.hidden {display:none;}
 
+.switch {position:relative;width:50px;height:25px;}
 .switch input {display:none;}
-
 .slider {
-    position:absolute;
-    top:0;left:0;right:0;bottom:0;
-    background:#ccc;
-    border-radius:25px;
+    position:absolute;top:0;left:0;right:0;bottom:0;
+    background:#ccc;border-radius:25px;
 }
-
 .slider:before {
-    content:"";
-    position:absolute;
-    width:20px;height:20px;
-    left:3px;bottom:3px;
-    background:white;
-    border-radius:50%;
+    content:""; position:absolute;
+    width:20px;height:20px;left:3px;bottom:3px;
+    background:white;border-radius:50%;
 }
-
-input:checked + .slider {
-    background:black;
-}
-
-input:checked + .slider:before {
-    transform:translateX(24px);
-}
+input:checked + .slider {background:black;}
+input:checked + .slider:before {transform:translateX(24px);}
 </style>
 
 <script>
@@ -155,26 +96,21 @@ function toggleFields(){
 
 <div class="container">
 
-<div class="header">
-<img src="/static/ppm-stone-logo.png">
-<h2>PPM Stone Cladding Calculator</h2>
-</div>
+<h2>PPM Cladding Calculator</h2>
 
 <form method="post">
 
 <div class="section">
 <label>Application Type</label>
 <select name="type" id="type" onchange="toggleFields()" required>
-<option value="">-- Select Application --</option>
+<option value="">-- Select --</option>
 <option value="wall">Wall</option>
 <option value="floor">Floor</option>
 <option value="pillar">Pillar</option>
 </select>
 </div>
 
-<!-- WALL / FLOOR -->
 <div id="wallSection" class="section hidden">
-
 <h3>Wall / Floor Inputs</h3>
 
 <div class="row">
@@ -185,9 +121,7 @@ function toggleFields(){
 <input name="corner_lm" placeholder="Corner Length (LM)">
 </div>
 
-<!-- PILLAR -->
 <div id="pillarSection" class="section hidden">
-
 <h3>Pillar Inputs</h3>
 
 <div class="row">
@@ -201,7 +135,6 @@ function toggleFields(){
 <option value="3">3 Sides</option>
 <option value="4">4 Sides</option>
 </select>
-
 </div>
 
 <div class="section">
@@ -227,14 +160,14 @@ function toggleFields(){
 <textarea name="address" placeholder="Site Address"></textarea>
 </div>
 
-<button type="submit">Calculate & Generate Quote</button>
+<button type="submit">Calculate</button>
 
 </form>
 
 {% if result %}
 <hr>
 
-<h3>Calculation Summary</h3>
+<h3>Calculation</h3>
 
 <p>Total Area: {{result.total_area}} m²</p>
 <p>Corner Area: {{result.corner_area}} m²</p>
@@ -257,7 +190,7 @@ function toggleFields(){
 {% for k,v in result.items() %}
 <input type="hidden" name="{{k}}" value="{{v}}">
 {% endfor %}
-<button>Download Quote (PDF)</button>
+<button>Download PDF</button>
 </form>
 
 {% endif %}
@@ -268,36 +201,37 @@ function toggleFields(){
 """
 
 # =========================
-# MAIN LOGIC
+# MAIN
 # =========================
 @app.route("/", methods=["GET","POST"])
 def home():
-    if request.method=="POST":
+
+    if request.method == "POST":
 
         typ = request.form.get("type")
-        p = PRODUCTS[request.form.get("product")]
+        p = PRODUCTS.get(request.form.get("product"))
 
-        length=float(request.form.get("length") or 0)
-        height=float(request.form.get("height") or 0)
-        corner_lm=float(request.form.get("corner_lm") or 0)
+        length = float(request.form.get("length") or 0)
+        height = float(request.form.get("height") or 0)
+        corner_lm = float(request.form.get("corner_lm") or 0)
 
-        ph=float(request.form.get("pillar_height") or 0)
-        front=float(request.form.get("front") or 0)
-        depth=float(request.form.get("depth") or 0)
-        sides=int(request.form.get("sides") or 3)
+        ph = float(request.form.get("pillar_height") or 0)
+        front = float(request.form.get("front") or 0)
+        depth = float(request.form.get("depth") or 0)
+        sides = int(request.form.get("sides") or 3)
 
         if typ in ["wall","floor"]:
             area = length * height
         else:
             if sides == 4:
-                area = ph*(2*front + 2*depth)
-                corner_lm = ph*4
+                area = ph * (2*front + 2*depth)
+                corner_lm = ph * 4
             else:
-                area = ph*(front + 2*depth)
-                corner_lm = ph*2
+                area = ph * (front + 2*depth)
+                corner_lm = ph * 2
 
         total_area = area
-        corner_area = corner_lm*(2*CORNER_RETURN)
+        corner_area = corner_lm * (2 * CORNER_RETURN)
         net_area = max(total_area - corner_area, 0)
         area_waste = net_area * 1.1
 
@@ -325,8 +259,6 @@ def home():
             "install": request.form.get("install"),
             "install_body": round(install_body,2),
             "install_corner": round(install_corner,2),
-            "subtotal": round(subtotal,2),
-            "gst": round(gst,2),
             "total": round(total,2)
         }
 
@@ -339,36 +271,17 @@ def home():
 # =========================
 @app.route("/pdf", methods=["POST"])
 def pdf():
+
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer)
     styles = getSampleStyleSheet()
 
     story = []
 
-    try:
-        story.append(Image("static/ppm-stone-logo.png", width=120, height=50))
-    except:
-        pass
+    story.append(Paragraph("PPM QUOTE", styles['Title']))
+    story.append(Spacer(1,10))
 
-    story.append(Paragraph("<b>PPM STONE QUOTE</b>", styles['Title']))
-
-    table = [
-        ["Item","Amount"],
-        ["Body", "$"+money(request.form.get("body_total"))],
-        ["Corner", "$"+money(request.form.get("corner_total"))],
-        ["Subtotal", "$"+money(request.form.get("subtotal"))],
-        ["GST", "$"+money(request.form.get("gst"))],
-        ["Total", "$"+money(request.form.get("total"))],
-    ]
-
-    t = Table(table)
-    t.setStyle(TableStyle([
-        ('GRID',(0,0),(-1,-1),1,colors.black),
-        ('BACKGROUND',(0,0),(-1,0),colors.grey)
-    ]))
-
-    story.append(Spacer(1,20))
-    story.append(t)
+    story.append(Paragraph("Total: $" + request.form.get("total"), styles['Normal']))
 
     doc.build(story)
     buffer.seek(0)
