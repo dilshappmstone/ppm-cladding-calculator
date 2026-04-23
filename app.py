@@ -275,13 +275,82 @@ def pdf():
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer)
     styles = getSampleStyleSheet()
+    center = ParagraphStyle(name='c', alignment=TA_CENTER)
 
     story = []
 
-    story.append(Paragraph("PPM QUOTE", styles['Title']))
+    # HEADER
+    story.append(Paragraph("<b>PPM Stone</b>", styles['Title']))
+    story.append(Paragraph("PPM Enterprises Pty Ltd", styles['Normal']))
+    story.append(Paragraph("Factory 2, 64-70 Edison Road Dandenong South VIC 3175", styles['Normal']))
+    story.append(Paragraph("Tel: 1300 278 355", styles['Normal']))
+    story.append(Paragraph("Email: admin@ppmstone.com.au", styles['Normal']))
+    story.append(Paragraph("ABN: 79 116 045 553", styles['Normal']))
+
+    story.append(Spacer(1,10))
+    story.append(Paragraph("<b>QUOTE</b>", center))
     story.append(Spacer(1,10))
 
-    story.append(Paragraph("Total: $" + request.form.get("total"), styles['Normal']))
+    now = datetime.now()
+    story.append(Paragraph(now.strftime("Quote No: QU-%y%m%d01"), styles['Normal']))
+    story.append(Paragraph(now.strftime("Date: %d/%m/%Y"), styles['Normal']))
+
+    story.append(Spacer(1,10))
+
+    # CUSTOMER
+    story.append(Paragraph("<b>Customer Details</b>", styles['Heading3']))
+    story.append(Paragraph(f"Customer Name: {request.form.get('customer')}", styles['Normal']))
+    story.append(Paragraph(f"Project Reference: {request.form.get('project')}", styles['Normal']))
+    story.append(Paragraph(f"Site Address: {request.form.get('address')}", styles['Normal']))
+
+    story.append(Spacer(1,15))
+
+    # PRODUCT TABLE
+    table = [
+        ["Description","Qty","Unit Price","Amount"],
+        ["Body Supply", request.form.get("area_waste"), request.form.get("body_rate"), request.form.get("body_total")],
+        ["Corner Supply", request.form.get("corner_pcs"), request.form.get("corner_rate"), request.form.get("corner_total")]
+    ]
+
+    if request.form.get("install") == "on":
+        table.append(["Installation Body","-", "120", request.form.get("install_body")])
+        table.append(["Installation Corner","-", "120", request.form.get("install_corner")])
+
+    t = Table(table)
+    t.setStyle(TableStyle([
+        ('GRID',(0,0),(-1,-1),1,colors.black),
+        ('BACKGROUND',(0,0),(-1,0),colors.grey)
+    ]))
+
+    story.append(t)
+
+    # TOTALS
+    subtotal = float(request.form.get("body_total",0)) + float(request.form.get("corner_total",0))
+    if request.form.get("install") == "on":
+        subtotal += float(request.form.get("install_body",0)) + float(request.form.get("install_corner",0))
+
+    gst = subtotal * 0.10
+    total = subtotal + gst
+
+    totals = [
+        ["Subtotal (Ex GST)", "$"+money(subtotal)],
+        ["GST (10%)", "$"+money(gst)],
+        ["Total (Inc GST)", "$"+money(total)]
+    ]
+
+    t2 = Table(totals)
+    t2.setStyle(TableStyle([
+        ('GRID',(0,0),(-1,-1),1,colors.black),
+        ('BACKGROUND',(0,2),(-1,2),colors.lightgrey)
+    ]))
+
+    story.append(Spacer(1,15))
+    story.append(t2)
+
+    # NOTES
+    story.append(Spacer(1,15))
+    story.append(Paragraph("<b>Notes:</b> This is an estimate only. Final figures may vary.", styles['Normal']))
+    story.append(Paragraph("<b>Disclaimer:</b> Natural stone variations may occur.", styles['Normal']))
 
     doc.build(story)
     buffer.seek(0)
