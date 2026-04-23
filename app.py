@@ -41,41 +41,109 @@ HTML = """
 <!DOCTYPE html>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PPM Cladding Calculator</title>
 
 <style>
-body {font-family: Arial; background:#f4f6f8;}
-.container {max-width:900px;margin:auto;background:white;padding:30px;border-radius:10px;}
+body {
+    font-family: Arial;
+    background:#f4f6f8;
+    margin:0;
+}
 
-.section {margin-top:20px;}
+.container {
+    max-width:900px;
+    margin:auto;
+    background:white;
+    padding:20px;
+}
+
+/* HEADER */
+h2 {
+    font-size:22px;
+}
+
+/* SECTIONS */
+.section {
+    margin-top:20px;
+}
+
+/* INPUTS */
 input, select, textarea {
-    width:100%; padding:10px; margin-top:8px;
-    border:1px solid #ccc; border-radius:6px;
+    width:100%;
+    padding:14px;
+    margin-top:8px;
+    border:1px solid #ccc;
+    border-radius:8px;
+    font-size:16px; /* prevents zoom on iPhone */
 }
 
-.row {display:flex; gap:10px;}
-.row input {flex:1;}
+/* DESKTOP ROW */
+.row {
+    display:flex;
+    gap:10px;
+}
 
+/* MOBILE FIX */
+@media (max-width: 768px) {
+    .row {
+        flex-direction:column;
+    }
+}
+
+/* BUTTON */
 button {
-    width:100%; padding:14px; margin-top:20px;
-    background:black; color:white; border:none;
+    width:100%;
+    padding:16px;
+    margin-top:20px;
+    background:black;
+    color:white;
+    border:none;
+    border-radius:8px;
+    font-size:18px;
 }
 
-.hidden {display:none;}
+/* SWITCH */
+.switch {
+    position:relative;
+    width:52px;
+    height:28px;
+}
 
-.switch {position:relative;width:50px;height:25px;}
 .switch input {display:none;}
+
 .slider {
-    position:absolute;top:0;left:0;right:0;bottom:0;
-    background:#ccc;border-radius:25px;
+    position:absolute;
+    top:0;left:0;right:0;bottom:0;
+    background:#ccc;
+    border-radius:28px;
 }
+
 .slider:before {
-    content:""; position:absolute;
-    width:20px;height:20px;left:3px;bottom:3px;
-    background:white;border-radius:50%;
+    content:"";
+    position:absolute;
+    width:22px;height:22px;
+    left:3px;bottom:3px;
+    background:white;
+    border-radius:50%;
+    transition:0.3s;
 }
-input:checked + .slider {background:black;}
-input:checked + .slider:before {transform:translateX(24px);}
+
+input:checked + .slider {
+    background:black;
+}
+
+input:checked + .slider:before {
+    transform:translateX(24px);
+}
+
+/* RESULT BOX */
+.result {
+    margin-top:20px;
+    padding:15px;
+    background:#f9fafb;
+    border-radius:8px;
+}
 </style>
 
 <script>
