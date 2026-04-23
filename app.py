@@ -57,17 +57,29 @@ body {
     margin:40px auto;
     background:#ffffff;
     padding:30px 40px;
-    border-radius:8px;
-    box-shadow:0 4px 20px rgba(0,0,0,0.08);
+    border-radius:10px;
+    box-shadow:0 6px 25px rgba(0,0,0,0.08);
 }
 
-h1 {
-    margin-bottom:5px;
+/* HEADER */
+.header {
+    display:flex;
+    align-items:center;
+    gap:15px;
+    margin-bottom:25px;
+}
+
+.header img {
+    height:55px;
+}
+
+.header h1 {
+    margin:0;
 }
 
 .subtitle {
     color:#666;
-    margin-bottom:30px;
+    margin-bottom:25px;
 }
 
 .section {
@@ -82,8 +94,8 @@ label {
 
 small {
     color:#777;
-    display:block;
     margin-bottom:8px;
+    display:block;
 }
 
 input, select, textarea {
@@ -91,7 +103,6 @@ input, select, textarea {
     padding:12px;
     border:1px solid #ccc;
     border-radius:6px;
-    font-size:14px;
 }
 
 input:focus, select:focus, textarea:focus {
@@ -108,13 +119,55 @@ input:focus, select:focus, textarea:focus {
     flex:1;
 }
 
-.checkbox-row {
+/* TOGGLE SWITCH */
+.toggle-container {
     display:flex;
+    justify-content:space-between;
     align-items:center;
-    gap:10px;
-    margin-top:10px;
+    margin-top:15px;
 }
 
+.switch {
+    position: relative;
+    width:50px;
+    height:26px;
+}
+
+.switch input {display:none;}
+
+.slider {
+    position:absolute;
+    cursor:pointer;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    background:#ccc;
+    border-radius:26px;
+    transition:.3s;
+}
+
+.slider:before {
+    position:absolute;
+    content:"";
+    height:20px;
+    width:20px;
+    left:3px;
+    bottom:3px;
+    background:white;
+    border-radius:50%;
+    transition:.3s;
+}
+
+input:checked + .slider {
+    background:#000;
+}
+
+input:checked + .slider:before {
+    transform:translateX(24px);
+}
+
+/* BUTTON */
 button {
     margin-top:25px;
     width:100%;
@@ -131,6 +184,7 @@ button:hover {
     background:#333;
 }
 
+/* RESULT */
 .result {
     margin-top:30px;
     padding:25px;
@@ -139,13 +193,18 @@ button:hover {
     border:1px solid #ddd;
 }
 
-.result h3 {
-    margin-top:0;
-}
-
 .divider {
     margin:15px 0;
     border-top:1px solid #ddd;
+}
+
+/* PRODUCT IMAGE */
+.product-preview img {
+    width:100%;
+    max-height:250px;
+    object-fit:cover;
+    border-radius:6px;
+    margin-top:10px;
 }
 </style>
 
@@ -155,15 +214,40 @@ function toggleFields(){
     document.getElementById("wall").style.display=(t=="wall"||t=="floor")?"block":"none";
     document.getElementById("pillar").style.display=(t=="pillar")?"block":"none";
 }
+
+const images = {
+    "RB": "royal-blue.jpg",
+    "IWQ": "ivory-white.jpg",
+    "AWQ": "artic-white.jpg",
+    "CC": "country-cross.jpg"
+};
+
+function updateImage(){
+    let product = document.querySelector('[name="product"]').value;
+    document.getElementById("productImage").src = images[product];
+}
+
+window.onload = function(){
+    toggleFields();
+    updateImage();
+};
 </script>
 
 </head>
 
-<body onload="toggleFields()">
+<body>
 
 <div class="container">
 
-<h1>PPM Cladding Calculator</h1>
+<!-- HEADER -->
+<div class="header">
+    <img src="ppm-stone-logo.png">
+    <div>
+        <h1>PPM Stone</h1>
+        <small>Cladding Calculator</small>
+    </div>
+</div>
+
 <p class="subtitle">Estimate material quantities and generate a professional quote</p>
 
 <form method="post" action="/">
@@ -222,27 +306,35 @@ function toggleFields(){
 
 <div class="section">
 <label>Product</label>
-<select name="product">
+<select name="product" onchange="updateImage()">
 {% for k,p in products.items() %}
 <option value="{{k}}">{{p.name}}</option>
 {% endfor %}
 </select>
 
-<div class="checkbox-row">
-<input type="checkbox" name="install">
-<label>Include Installation</label>
+<div class="product-preview">
+<img id="productImage">
 </div>
+
+<div class="toggle-container">
+<span>Include Installation</span>
+<label class="switch">
+<input type="checkbox" name="install">
+<span class="slider"></span>
+</label>
+</div>
+
 </div>
 
 <div class="section">
 <label>Customer Name</label>
-<input name="customer" placeholder="Enter customer name">
+<input name="customer">
 
 <label>Project Reference</label>
-<input name="project" placeholder="Enter project reference">
+<input name="project">
 
 <label>Site Address</label>
-<textarea name="address" placeholder="Enter site address"></textarea>
+<textarea name="address"></textarea>
 </div>
 
 <button type="submit">Calculate & Generate Quote</button>
