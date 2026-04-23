@@ -40,75 +40,223 @@ HTML = """
 <head>
 <title>PPM Cladding Calculator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="/static/favicon.ico">
 
 <style>
-body {font-family: Arial; background:#f4f6f8;}
-.container {max-width:900px;margin:auto;background:white;padding:20px;border-radius:10px;}
-input, select, textarea {width:100%;padding:12px;margin-top:8px;}
-button {width:100%;padding:14px;margin-top:20px;background:black;color:white;}
-.result {background:#f9fafb;padding:15px;margin-top:20px;border-radius:8px;}
-.row {display:flex; gap:10px;}
-@media(max-width:768px){ .row{flex-direction:column;} }
+body {
+    font-family: Arial;
+    background:#f4f6f8;
+    margin:0;
+}
+
+.container {
+    max-width:950px;
+    margin:30px auto;
+    background:white;
+    padding:30px;
+    border-radius:10px;
+    box-shadow:0 6px 20px rgba(0,0,0,0.08);
+}
+
+h1 {
+    margin-bottom:5px;
+}
+
+.subtitle {
+    color:#666;
+    margin-bottom:25px;
+}
+
+.section {
+    margin-bottom:25px;
+}
+
+label {
+    font-weight:600;
+    display:block;
+    margin-top:12px;
+}
+
+input, select, textarea {
+    width:100%;
+    padding:12px;
+    border:1px solid #ccc;
+    border-radius:6px;
+    margin-top:5px;
+}
+
+.row {
+    display:flex;
+    gap:15px;
+}
+
+.row > div {
+    flex:1;
+}
+
+@media(max-width:768px){
+    .row {flex-direction:column;}
+}
+
+.switch {
+  position: relative;
+  width: 50px;
+  height: 26px;
+}
+
+.switch input {display:none;}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  background: #ccc;
+  border-radius: 30px;
+  top:0;left:0;right:0;bottom:0;
+}
+
+.slider:before {
+  content:"";
+  position:absolute;
+  height:20px;
+  width:20px;
+  left:3px;
+  bottom:3px;
+  background:white;
+  border-radius:50%;
+}
+
+input:checked + .slider {
+  background:black;
+}
+
+input:checked + .slider:before {
+  transform: translateX(24px);
+}
+
+button {
+    margin-top:20px;
+    width:100%;
+    padding:14px;
+    background:black;
+    color:white;
+    border:none;
+    border-radius:6px;
+    font-size:16px;
+}
+
+.result {
+    margin-top:30px;
+    background:#f9fafb;
+    padding:20px;
+    border-radius:8px;
+    border:1px solid #ddd;
+}
 </style>
 
 <script>
 function toggleFields(){
  let t=document.getElementById("type").value;
- document.getElementById("wall").style.display=(t=="wall"||t=="floor")?"block":"none";
- document.getElementById("pillar").style.display=(t=="pillar")?"block":"none";
+
+ document.getElementById("wall").style.display =
+    (t=="wall"||t=="floor")?"block":"none";
+
+ document.getElementById("pillar").style.display =
+    (t=="pillar")?"block":"none";
 }
 </script>
+
 </head>
 
 <body>
+
 <div class="container">
 
-<h2>PPM Cladding Calculator</h2>
+<h1>PPM Cladding Calculator</h1>
+<p class="subtitle">Estimate quantities & generate professional quotes</p>
 
 <form method="post">
 
-<select name="type" id="type" onchange="toggleFields()" required>
+<div class="section">
+<label>Application Type</label>
+<select name="type" id="type" onchange="toggleFields()">
 <option value="">Select Type</option>
 <option value="wall">Wall</option>
 <option value="floor">Floor</option>
 <option value="pillar">Pillar</option>
 </select>
-
-<div id="wall" style="display:none;">
-<div class="row">
-<input name="length" placeholder="Length (m)">
-<input name="height" placeholder="Height / Width (m)">
-</div>
-<input name="corner_lm" placeholder="Corner Length (LM)">
 </div>
 
-<div id="pillar" style="display:none;">
+<div id="wall" class="section" style="display:none;">
 <div class="row">
-<input name="pillar_height" placeholder="Pillar Height">
-<input name="front" placeholder="Front Width">
+<div>
+<label>Length (m)</label>
+<input name="length">
 </div>
-<input name="depth" placeholder="Depth">
+<div>
+<label>Height / Width (m)</label>
+<input name="height">
+</div>
+</div>
+
+<label>Corner Length (LM)</label>
+<input name="corner_lm">
+</div>
+
+<div id="pillar" class="section" style="display:none;">
+<div class="row">
+<div>
+<label>Pillar Height</label>
+<input name="pillar_height">
+</div>
+<div>
+<label>Front Width</label>
+<input name="front">
+</div>
+</div>
+
+<label>Return Depth</label>
+<input name="depth">
+
+<label>Sides</label>
 <select name="sides">
 <option value="3">3 sides</option>
 <option value="4">4 sides</option>
 </select>
 </div>
 
+<div class="section">
+<label>Product</label>
 <select name="product">
 {% for k,p in products.items() %}
-<option value="{{k}}">{{p.name}} ({{p.body_code}} / {{p.corner_code}})</option>
+<option value="{{k}}">
+{{p.name}} ({{p.body_code}} / {{p.corner_code}})
+</option>
 {% endfor %}
 </select>
+</div>
 
-<label><input type="checkbox" name="install"> Include Installation</label>
+<div class="section">
+<div style="display:flex; justify-content:space-between; align-items:center;">
+<span>Include Installation</span>
+<label class="switch">
+<input type="checkbox" name="install">
+<span class="slider"></span>
+</label>
+</div>
+</div>
 
-<h3>Customer Details</h3>
+<div class="section">
+<label>Customer Name</label>
 <input name="customer">
+
+<label>Project</label>
 <input name="project">
+
+<label>Address</label>
 <textarea name="address"></textarea>
+</div>
 
 <button>Generate Quote</button>
+
 </form>
 
 {% if result %}
@@ -120,18 +268,15 @@ function toggleFields(){
 <p>Net Area: {{result.net_area}} m²</p>
 <p>With Wastage: {{result.area_waste}} m²</p>
 
-<h3>Breakdown</h3>
-<p>Body = {{result.area_waste}} × {{result.body_rate}} = ${{result.body_total}}</p>
-<p>Corner = {{result.corner_pcs}} × {{result.corner_rate}} = ${{result.corner_total}}</p>
+<h3>Cost</h3>
+<p>Body: ${{result.body_total}}</p>
+<p>Corner: ${{result.corner_total}}</p>
 
 {% if result.install %}
-<p>Installation Body = ${{result.install_body}}</p>
-<p>Installation Corner = ${{result.install_corner}}</p>
+<p>Installation Body: ${{result.install_body}}</p>
+<p>Installation Corner: ${{result.install_corner}}</p>
 {% endif %}
 
-<h3>Totals</h3>
-<p>Subtotal: ${{result.subtotal}}</p>
-<p>GST: ${{result.gst}}</p>
 <h2>Total: ${{result.total}}</h2>
 
 <form method="post" action="/pdf">
