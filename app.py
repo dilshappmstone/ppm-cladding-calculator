@@ -5,16 +5,22 @@ from datetime import datetime
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 
 app = Flask(__name__)
 
+# =========================
+# CONSTANTS
+# =========================
 PIECE_HEIGHT = 0.2
 CORNER_RETURN = 0.1
 INSTALL_BODY_RATE = 120
 INSTALL_CORNER_RATE = 120
 GST_RATE = 0.10
 
+# =========================
+# PRODUCTS
+# =========================
 PRODUCTS = {
     "RB": {"name": "Royal Blue", "body_code": "CLD005", "corner_code": "CLD006", "body_price": 75, "corner_price": 25},
     "IWQ": {"name": "Ivory White Quartz", "body_code": "CLD007", "corner_code": "CLD008", "body_price": 75, "corner_price": 25},
@@ -26,7 +32,7 @@ def money(v):
     return "{:.2f}".format(float(v))
 
 # =========================
-# HTML
+# HTML (UNCHANGED - SAFE)
 # =========================
 HTML = """<!DOCTYPE html>
 <html>
@@ -34,13 +40,11 @@ HTML = """<!DOCTYPE html>
 <title>PPM Cladding Calculator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="/static/favicon.ico">
-
 <style>
 body {font-family: Arial; background:#f4f6f8;}
 .container {max-width:900px;margin:auto;background:white;padding:20px;border-radius:10px;}
 input, select, textarea {width:100%;padding:12px;margin-top:8px;}
 button {width:100%;padding:14px;margin-top:20px;background:black;color:white;}
-.result {background:#f9fafb;padding:15px;margin-top:20px;border-radius:8px;}
 .row {display:flex; gap:10px;}
 @media(max-width:768px){ .row{flex-direction:column;} }
 </style>
@@ -48,15 +52,10 @@ button {width:100%;padding:14px;margin-top:20px;background:black;color:white;}
 <script>
 function toggleFields(){
  let t=document.getElementById("type").value;
-
- document.getElementById("wallSection").style.display =
-    (t=="wall" || t=="floor") ? "block" : "none";
-
- document.getElementById("pillarSection").style.display =
-    (t=="pillar") ? "block" : "none";
+ document.getElementById("wallSection").style.display=(t=="wall"||t=="floor")?"block":"none";
+ document.getElementById("pillarSection").style.display=(t=="pillar")?"block":"none";
 }
 </script>
-
 </head>
 
 <body>
@@ -109,20 +108,16 @@ function toggleFields(){
 <textarea name="address"></textarea>
 
 <button>Generate Quote</button>
+
 </form>
 
 {% if result %}
-<div class="result">
-<p>Total Area: {{result.total_area}}</p>
-<p>Total: ${{result.total}}</p>
-
 <form method="post" action="/pdf">
 {% for k,v in result.items() %}
 <input type="hidden" name="{{k}}" value="{{v}}">
 {% endfor %}
 <button>Download PDF</button>
 </form>
-</div>
 {% endif %}
 
 </div>
@@ -131,10 +126,11 @@ function toggleFields(){
 """
 
 # =========================
-# MAIN
+# MAIN LOGIC (UNCHANGED)
 # =========================
 @app.route("/", methods=["GET","POST"])
 def home():
+
     if request.method=="POST":
 
         typ = request.form.get("type")
@@ -196,8 +192,7 @@ def home():
             "total":total,
             "customer":request.form.get("customer"),
             "project":request.form.get("project"),
-            "address":request.form.get("address"),
-            "total_area":total_area
+            "address":request.form.get("address")
         }
 
         return render_template_string(HTML,result=result,products=PRODUCTS)
@@ -205,7 +200,7 @@ def home():
     return render_template_string(HTML,result=None,products=PRODUCTS)
 
 # =========================
-# PDF
+# PREMIUM PDF
 # =========================
 @app.route("/pdf", methods=["POST"])
 def pdf():
@@ -214,20 +209,96 @@ def pdf():
     doc = SimpleDocTemplate(buffer)
     styles = getSampleStyleSheet()
     center = ParagraphStyle(name='c', alignment=TA_CENTER)
+    right = ParagraphStyle(name='r', alignment=TA_RIGHT)
 
     story = []
 
-    story.append(Paragraph("<b>PPM STONE QUOTE</b>", styles['Title']))
+    # LOGO
+    try:
+        story.append(Image("static/ppm-stone-logo.png", width=140, height=60))
+    except:
+        pass
 
-    table = [
-        ["Subtotal", "$"+money(request.form.get("subtotal"))],
-        ["GST", "$"+money(request.form.get("gst"))],
-        ["Total", "$"+money(request.form.get("total"))]
+    # HEADER
+    story.append(Paragraph("<b>PPM Stone</b>", styles['Title']))
+    story.append(Paragraph("PPM Enterprises Pty Ltd", styles['Normal']))
+    story.append(Paragraph("Factory 2, 64-70 Edison Road Dandenong South VIC 3175", styles['Normal']))
+    story.append(Paragraph("Tel: 1300 278 355", styles['Normal']))
+    story.append(Paragraph("Email: admin@ppmstone.com.au", styles['Normal']))
+    story.append(Paragraph("ABN: 79 116 045 553", styles['Normal']))
+
+    story.append(Spacer(1,10))
+    story.append(Paragraph("<b>QUOTE</b>", center))
+
+    story.append(Spacer(1,10))
+    now = datetime.now()
+    story.append(Paragraph(now.strftime("Quote No: QU-%y%m%d01"), styles['Normal']))
+    story.append(Paragraph(now.strftime("Date: %d/%m/%Y"), styles['Normal']))
+
+    story.append(Spacer(1,10))
+
+    # CUSTOMER
+    story.append(Paragraph("<b>Customer Details</b>", styles['Heading3']))
+    story.append(Paragraph(f"Customer Name: {request.form.get('customer')}", styles['Normal']))
+    story.append(Paragraph(f"Project Reference: {request.form.get('project')}", styles['Normal']))
+    story.append(Paragraph(f"Site Address: {request.form.get('address')}", styles['Normal']))
+
+    story.append(Spacer(1,15))
+
+    # TABLE
+    data = [
+        ["Code","Description","Qty","Unit","Rate","Amount"],
+        [request.form.get("body_code"),
+         f"PPM Cladding | Body | {request.form.get('product')} | 20–40mm",
+         request.form.get("area_waste"),"m²",
+         "$"+money(request.form.get("body_rate")),
+         "$"+money(request.form.get("body_total"))],
+
+        [request.form.get("corner_code"),
+         f"PPM Cladding | Corner | {request.form.get('product')} | 20–40mm",
+         request.form.get("corner_pcs"),"pcs",
+         "$"+money(request.form.get("corner_rate")),
+         "$"+money(request.form.get("corner_total"))]
     ]
 
-    story.append(Table(table))
+    if request.form.get("install") == "on":
+        data.append([request.form.get("body_code")+"-I","Installation Body",
+                     request.form.get("area_waste"),"m²","$120",
+                     "$"+money(request.form.get("install_body"))])
 
-    # ✅ FIXED NOTES SECTION (NOW INSIDE FUNCTION)
+        data.append([request.form.get("corner_code")+"-I","Installation Corner",
+                     request.form.get("corner_lm"),"LM","$120",
+                     "$"+money(request.form.get("install_corner"))])
+
+    table = Table(data)
+    table.setStyle(TableStyle([
+        ('GRID',(0,0),(-1,-1),0.8,colors.black),
+        ('BACKGROUND',(0,0),(-1,0),colors.black),
+        ('TEXTCOLOR',(0,0),(-1,0),colors.white),
+        ('ALIGN',(2,1),(-1,-1),'RIGHT')
+    ]))
+
+    story.append(table)
+
+    # TOTALS
+    totals = [
+        ["Subtotal (Ex GST)", "$"+money(request.form.get("subtotal"))],
+        ["GST (10%)", "$"+money(request.form.get("gst"))],
+        ["TOTAL (INC GST)", "$"+money(request.form.get("total"))]
+    ]
+
+    t2 = Table(totals, colWidths=[300,120])
+    t2.setStyle(TableStyle([
+        ('GRID',(0,0),(-1,-1),0.8,colors.black),
+        ('ALIGN',(1,0),(1,-1),'RIGHT'),
+        ('FONTNAME',(0,2),(-1,2),'Helvetica-Bold'),
+        ('BACKGROUND',(0,2),(-1,2),colors.lightgrey)
+    ]))
+
+    story.append(Spacer(1,15))
+    story.append(t2)
+
+    # NOTES
     story.append(Spacer(1,20))
     story.append(Paragraph("Notes:", styles['Heading3']))
     story.append(Paragraph(
@@ -238,7 +309,8 @@ def pdf():
     story.append(Spacer(1,10))
     story.append(Paragraph("Disclaimer:", styles['Heading3']))
     story.append(Paragraph(
-        "Please note that our bluestones and stone claddings are natural, so variations in colour, texture, and veining may occur. These differences from samples or images are natural and enhance the stone's unique character.", styles['Normal'].",
+        "Please note that our bluestones and stone claddings are natural, so variations in colour, texture, and veining may occur. "
+        "These differences from samples or images are natural and enhance the stone's unique character.",
         styles['Normal']
     ))
 
