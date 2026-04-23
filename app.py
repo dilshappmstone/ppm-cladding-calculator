@@ -39,65 +39,179 @@ def money(val):
 # =========================
 # HTML
 # =========================
-HTML = """<!DOCTYPE html>
+HTML = """
+<!DOCTYPE html>
 <html>
 <head>
 <title>PPM Cladding Calculator</title>
+
 <style>
-body {font-family: Arial; background:#f5f5f5;}
-.container {max-width:900px; margin:auto; background:white; padding:30px;}
-input, select, textarea {width:100%; padding:10px; margin-bottom:5px;}
-small {color:#555;}
-button {padding:12px; width:100%; background:black; color:white;}
-.result {background:#f0f0f0; padding:20px;}
+body {
+    font-family: Arial, sans-serif;
+    background:#f4f6f8;
+    margin:0;
+}
+
+.container {
+    max-width:950px;
+    margin:40px auto;
+    background:#ffffff;
+    padding:30px 40px;
+    border-radius:8px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.08);
+}
+
+h1 {
+    margin-bottom:5px;
+}
+
+.subtitle {
+    color:#666;
+    margin-bottom:30px;
+}
+
+.section {
+    margin-bottom:25px;
+}
+
+label {
+    font-weight:600;
+    display:block;
+    margin-top:12px;
+}
+
+small {
+    color:#777;
+    display:block;
+    margin-bottom:8px;
+}
+
+input, select, textarea {
+    width:100%;
+    padding:12px;
+    border:1px solid #ccc;
+    border-radius:6px;
+    font-size:14px;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color:#000;
+    outline:none;
+}
+
+.row {
+    display:flex;
+    gap:15px;
+}
+
+.row > div {
+    flex:1;
+}
+
+.checkbox-row {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:10px;
+}
+
+button {
+    margin-top:25px;
+    width:100%;
+    padding:14px;
+    background:#000;
+    color:#fff;
+    border:none;
+    border-radius:6px;
+    font-size:16px;
+    cursor:pointer;
+}
+
+button:hover {
+    background:#333;
+}
+
+.result {
+    margin-top:30px;
+    padding:25px;
+    background:#f9fafb;
+    border-radius:6px;
+    border:1px solid #ddd;
+}
+
+.result h3 {
+    margin-top:0;
+}
+
+.divider {
+    margin:15px 0;
+    border-top:1px solid #ddd;
+}
 </style>
 
 <script>
 function toggleFields(){
- let t=document.getElementById("type").value;
- document.getElementById("wall").style.display=(t=="wall"||t=="floor")?"block":"none";
- document.getElementById("pillar").style.display=(t=="pillar")?"block":"none";
+    let t=document.getElementById("type").value;
+    document.getElementById("wall").style.display=(t=="wall"||t=="floor")?"block":"none";
+    document.getElementById("pillar").style.display=(t=="pillar")?"block":"none";
 }
 </script>
+
 </head>
 
 <body onload="toggleFields()">
 
 <div class="container">
-<h2>PPM Cladding Calculator</h2>
+
+<h1>PPM Cladding Calculator</h1>
+<p class="subtitle">Estimate material quantities and generate a professional quote</p>
 
 <form method="post" action="/">
 
-<h3>Application Type</h3>
+<div class="section">
+<label>Application Type</label>
 <select name="type" id="type" onchange="toggleFields()">
 <option value="wall">Wall</option>
 <option value="floor">Floor</option>
 <option value="pillar">Pillar</option>
 </select>
-
-<div id="wall">
-<label>Length (m)</label>
-<input name="length" placeholder="Example: 5.5">
-<small>Total horizontal length</small>
-
-<label>Height / Width (m)</label>
-<input name="height" placeholder="Example: 2.4">
-<small>Wall height OR floor width</small>
-
-<label>Corner Length (LM)</label>
-<input name="corner_lm" placeholder="Example: 10">
-<small>Total vertical edges</small>
 </div>
 
-<div id="pillar">
-<label>Pillar Height (m)</label>
-<input name="pillar_height" placeholder="Example: 3">
+<div id="wall" class="section">
+<div class="row">
+<div>
+<label>Length (m)</label>
+<input name="length" placeholder="e.g. 5.5">
+<small>Total horizontal length</small>
+</div>
 
+<div>
+<label>Height / Width (m)</label>
+<input name="height" placeholder="e.g. 2.4">
+<small>Wall height or floor width</small>
+</div>
+</div>
+
+<label>Corner Length (LM)</label>
+<input name="corner_lm" placeholder="e.g. 10">
+<small>Total vertical edges in meters</small>
+</div>
+
+<div id="pillar" class="section">
+<div class="row">
+<div>
+<label>Pillar Height (m)</label>
+<input name="pillar_height" placeholder="e.g. 3">
+</div>
+
+<div>
 <label>Front Width (m)</label>
-<input name="front" placeholder="Example: 1.2">
+<input name="front" placeholder="e.g. 1.2">
+</div>
+</div>
 
 <label>Return Depth (m)</label>
-<input name="depth" placeholder="Example: 0.6">
+<input name="depth" placeholder="e.g. 0.6">
 
 <label>Sides Covered</label>
 <select name="sides">
@@ -106,49 +220,58 @@ function toggleFields(){
 </select>
 </div>
 
-<h3>Product</h3>
+<div class="section">
+<label>Product</label>
 <select name="product">
 {% for k,p in products.items() %}
 <option value="{{k}}">{{p.name}}</option>
 {% endfor %}
 </select>
 
-<div style="display:flex; align-items:center; gap:10px;">
+<div class="checkbox-row">
 <input type="checkbox" name="install">
 <label>Include Installation</label>
 </div>
+</div>
 
-<h3>Customer Details</h3>
-<input name="customer" placeholder="Customer Name">
-<input name="project" placeholder="Project Reference">
-<textarea name="address" placeholder="Site Address"></textarea>
+<div class="section">
+<label>Customer Name</label>
+<input name="customer" placeholder="Enter customer name">
 
-<button type="submit">Calculate</button>
+<label>Project Reference</label>
+<input name="project" placeholder="Enter project reference">
+
+<label>Site Address</label>
+<textarea name="address" placeholder="Enter site address"></textarea>
+</div>
+
+<button type="submit">Calculate & Generate Quote</button>
+
 </form>
 
 {% if result %}
 <div class="result">
 
-<h3>Calculation Breakdown</h3>
+<h3>Calculation Summary</h3>
 
-<p><b>Total Area</b> = {{result.total_area}} m²</p>
-<p><b>Corner Deduction</b> = {{result.corner_area}} m²</p>
-<p><b>Net Area</b> = {{result.net_area}} m²</p>
-<p><b>With Wastage</b> = {{result.area_waste}} m²</p>
+<p><b>Total Area:</b> {{result.total_area}} m²</p>
+<p><b>Corner Deduction:</b> {{result.corner_area}} m²</p>
+<p><b>Net Area:</b> {{result.net_area}} m²</p>
+<p><b>Area with Wastage:</b> {{result.area_waste}} m²</p>
 
-<hr>
+<div class="divider"></div>
 
 <h3>Cost Breakdown</h3>
 
-<p>Body = {{result.area_waste}} × {{result.body_rate}} = ${{result.body_total}}</p>
-<p>Corner = {{result.corner_pcs}} pcs × {{result.corner_rate}} = ${{result.corner_total}}</p>
+<p>Body: {{result.area_waste}} × {{result.body_rate}} = <b>${{result.body_total}}</b></p>
+<p>Corner: {{result.corner_pcs}} pcs × {{result.corner_rate}} = <b>${{result.corner_total}}</b></p>
 
 {% if result.install %}
-<p>Install Body = ${{result.install_body}}</p>
-<p>Install Corner = ${{result.install_corner}}</p>
+<p>Installation Body: <b>${{result.install_body}}</b></p>
+<p>Installation Corner: <b>${{result.install_corner}}</b></p>
 {% endif %}
 
-<hr>
+<div class="divider"></div>
 
 <h2>Total (Inc GST): ${{result.total}}</h2>
 
@@ -156,7 +279,7 @@ function toggleFields(){
 {% for k,v in result.items() %}
 <input type="hidden" name="{{k}}" value="{{v}}">
 {% endfor %}
-<button type="submit">Download Quote</button>
+<button type="submit">Download Quote (PDF)</button>
 </form>
 
 </div>
