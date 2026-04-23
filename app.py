@@ -262,6 +262,25 @@ function toggleFields(){
 {% if result %}
 <div class="result">
 
+<h3>Project Details</h3>
+
+<p><b>Customer:</b> {{result.customer}}</p>
+<p><b>Project:</b> {{result.project}}</p>
+<p><b>Address:</b> {{result.address}}</p>
+
+<hr>
+
+<h3>Product</h3>
+
+<p>
+<b>{{result.product_name}}</b><br>
+Body Code: {{result.body_code}}<br>
+Corner Code: {{result.corner_code}}<br>
+Size: {{result.size}}
+</p>
+
+<hr>
+
 <h3>Calculation</h3>
 
 <p><b>Total Area:</b> {{"%.2f"|format(result.total_area)}} m²</p>
@@ -284,13 +303,8 @@ Corner: {{result.corner_pcs}} pcs × ${{"{:,.2f}".format(result.corner_rate)}}
 </p>
 
 {% if result.install %}
-<p>
-Installation Body: <b>${{"{:,.2f}".format(result.install_body)}}</b>
-</p>
-
-<p>
-Installation Corner: <b>${{"{:,.2f}".format(result.install_corner)}}</b>
-</p>
+<p>Installation Body: <b>${{"{:,.2f}".format(result.install_body)}}</b></p>
+<p>Installation Corner: <b>${{"{:,.2f}".format(result.install_corner)}}</b></p>
 {% endif %}
 
 <hr>
