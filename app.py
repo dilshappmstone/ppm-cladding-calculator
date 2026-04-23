@@ -324,14 +324,12 @@ def pdf():
     story.append(Spacer(1,15))
     story.append(t2)
 
-    story.append(Spacer(1,25))
+    # =========================
+# NOTES & DISCLAIMER (SAFE)
+# =========================
+story.append(Spacer(1,20))
 
-# NOTES
-story.append(Paragraph(
-    "<b>Notes:</b>",
-    styles['Heading3']
-))
-
+story.append(Paragraph("Notes:", styles['Heading3']))
 story.append(Spacer(1,6))
 
 story.append(Paragraph(
@@ -341,12 +339,7 @@ story.append(Paragraph(
 
 story.append(Spacer(1,12))
 
-# DISCLAIMER
-story.append(Paragraph(
-    "<b>Disclaimer:</b>",
-    styles['Heading3']
-))
-
+story.append(Paragraph("Disclaimer:", styles['Heading3']))
 story.append(Spacer(1,6))
 
 story.append(Paragraph(
