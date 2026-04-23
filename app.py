@@ -110,7 +110,9 @@ function selectProduct(code, el){
 {% for k,p in products.items() %}
 <div class="product-card" onclick="selectProduct('{{k}}', this)">
 <img src="/static/{{k}}.jpg">
-<p>{{p.name}}</p>
+<p><b>{{p.name}}</b><br>
+<small>Code: {{p.body_code}} / {{p.corner_code}}</small>
+</p>
 </div>
 {% endfor %}
 </div>
