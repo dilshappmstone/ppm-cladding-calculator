@@ -1,3 +1,6 @@
 flask
 reportlab
 gunicorn
+flask
+flask-login
+flask-sqlalchemy
