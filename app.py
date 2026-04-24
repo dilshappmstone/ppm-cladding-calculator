@@ -270,14 +270,22 @@ function toggleFields(){
 
 <hr>
 
-<h3>Product</h3>
+<h3>Input Details</h3>
 
-<p>
-<b>{{result.product_name}}</b><br>
-Body Code: {{result.body_code}}<br>
-Corner Code: {{result.corner_code}}<br>
-Size: {{result.size}}
-</p>
+<p><b>Application Type:</b> {{result.type}}</p>
+
+{% if result.type == "wall" or result.type == "floor" %}
+<p><b>Length:</b> {{"%.2f"|format(result.length)}} m</p>
+<p><b>Height / Width:</b> {{"%.2f"|format(result.height)}} m</p>
+<p><b>Corner Length:</b> {{"%.2f"|format(result.corner_lm)}} LM</p>
+{% endif %}
+
+{% if result.type == "pillar" %}
+<p><b>Pillar Height:</b> {{"%.2f"|format(result.pillar_height)}} m</p>
+<p><b>Front Width:</b> {{"%.2f"|format(result.front)}} m</p>
+<p><b>Depth:</b> {{"%.2f"|format(result.depth)}} m</p>
+<p><b>Sides:</b> {{result.sides}}</p>
+{% endif %}
 
 <hr>
 
@@ -378,15 +386,24 @@ def home():
         gst = subtotal*GST_RATE
         total = subtotal+gst
 
-        result = {
+   result = {
     "product_name": p["name"],
     "size": p["size"],
     "body_code": p["body_code"],
     "corner_code": p["corner_code"],
 
+ 
+    "type": typ,
+    "length": length,
+    "height": height,
+    "corner_lm": corner_lm,
+    "pillar_height": ph,
+    "front": front,
+    "depth": depth,
+    "sides": sides,
+
     "area_waste": round(area_waste, 2),
     "corner_pcs": corner_pcs,
-    "corner_lm": round(corner_lm, 2),
 
     "body_rate": p["body_price"],
     "corner_rate": p["corner_price"],
