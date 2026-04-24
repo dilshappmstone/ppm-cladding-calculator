@@ -386,51 +386,51 @@ def home():
         gst = subtotal*GST_RATE
         total = subtotal+gst
 
-result = {
-    "product_name": p["name"],
-    "size": p["size"],
-    "body_code": p["body_code"],
-    "corner_code": p["corner_code"],
+        # ✅ FIXED INDENTATION (INSIDE POST BLOCK)
+        result = {
+            "product_name": p["name"],
+            "size": p["size"],
+            "body_code": p["body_code"],
+            "corner_code": p["corner_code"],
 
-    # SAFE INPUT VALUES
-    "type": typ or "",
-    "length": length or 0,
-    "height": height or 0,
-    "corner_lm": corner_lm or 0,
-    "pillar_height": ph or 0,
-    "front": front or 0,
-    "depth": depth or 0,
-    "sides": sides or 0,
+            "type": typ or "",
+            "length": length or 0,
+            "height": height or 0,
+            "corner_lm": corner_lm or 0,
+            "pillar_height": ph or 0,
+            "front": front or 0,
+            "depth": depth or 0,
+            "sides": sides or 0,
 
-    "area_waste": round(area_waste, 2),
-    "corner_pcs": corner_pcs,
+            "area_waste": round(area_waste, 2),
+            "corner_pcs": corner_pcs,
 
-    "body_rate": p["body_price"],
-    "corner_rate": p["corner_price"],
+            "body_rate": p["body_price"],
+            "corner_rate": p["corner_price"],
 
-    "body_total": round(body_total, 2),
-    "corner_total": round(corner_total, 2),
+            "body_total": round(body_total, 2),
+            "corner_total": round(corner_total, 2),
 
-    "install": request.form.get("install"),
-    "install_body": round(install_body, 2),
-    "install_corner": round(install_corner, 2),
+            "install": request.form.get("install"),
+            "install_body": round(install_body, 2),
+            "install_corner": round(install_corner, 2),
 
-    "subtotal": round(subtotal, 2),
-    "gst": round(gst, 2),
-    "total": round(total, 2),
+            "subtotal": round(subtotal, 2),
+            "gst": round(gst, 2),
+            "total": round(total, 2),
 
-    "customer": request.form.get("customer") or "",
-    "project": request.form.get("project") or "",
-    "address": request.form.get("address") or "",
+            "customer": request.form.get("customer") or "",
+            "project": request.form.get("project") or "",
+            "address": request.form.get("address") or "",
 
-    "total_area": round(total_area, 2),
-    "corner_area": round(corner_area, 2),
-    "net_area": round(net_area, 2)
-}
+            "total_area": round(total_area, 2),
+            "corner_area": round(corner_area, 2),
+            "net_area": round(net_area, 2)
+        }
 
-        return render_template_string(HTML,result=result,products=PRODUCTS)
+        return render_template_string(HTML, result=result, products=PRODUCTS)
 
-    return render_template_string(HTML,result=None,products=PRODUCTS)
+    return render_template_string(HTML, result=None, products=PRODUCTS)
 
 # =========================
 # PDF
