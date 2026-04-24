@@ -386,21 +386,21 @@ def home():
         gst = subtotal*GST_RATE
         total = subtotal+gst
 
-   result = {
+result = {
     "product_name": p["name"],
     "size": p["size"],
     "body_code": p["body_code"],
     "corner_code": p["corner_code"],
 
- 
-    "type": typ,
-    "length": length,
-    "height": height,
-    "corner_lm": corner_lm,
-    "pillar_height": ph,
-    "front": front,
-    "depth": depth,
-    "sides": sides,
+    # SAFE INPUT VALUES
+    "type": typ or "",
+    "length": length or 0,
+    "height": height or 0,
+    "corner_lm": corner_lm or 0,
+    "pillar_height": ph or 0,
+    "front": front or 0,
+    "depth": depth or 0,
+    "sides": sides or 0,
 
     "area_waste": round(area_waste, 2),
     "corner_pcs": corner_pcs,
@@ -419,9 +419,9 @@ def home():
     "gst": round(gst, 2),
     "total": round(total, 2),
 
-    "customer": request.form.get("customer"),
-    "project": request.form.get("project"),
-    "address": request.form.get("address"),
+    "customer": request.form.get("customer") or "",
+    "project": request.form.get("project") or "",
+    "address": request.form.get("address") or "",
 
     "total_area": round(total_area, 2),
     "corner_area": round(corner_area, 2),
