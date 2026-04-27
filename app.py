@@ -6,8 +6,17 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'ppm_secret'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+
+db = SQLAlchemy(app)
+login_manager = LoginManager(app)
+login_manager.login_view = "login"
 
 # =========================
 # CONSTANTS
@@ -21,6 +30,16 @@ GST_RATE = 0.10
 # =========================
 # PRODUCTS (WITH SIZE)
 # =========================
+
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(100), unique=True)
+    password = db.Column(db.String(200))
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+    
 PRODUCTS = {
     "RB": {"name": "Royal Blue", "size": "20–40mm", "body_code": "CLD005", "corner_code": "CLD006", "body_price": 75, "corner_price": 25},
     "IWQ": {"name": "Ivory White Quartz", "size": "15–30mm", "body_code": "CLD007", "corner_code": "CLD008", "body_price": 75, "corner_price": 25},
@@ -342,7 +361,54 @@ Corner: {{result.corner_pcs}} pcs × ${{"{:,.2f}".format(result.corner_rate)}}
 # =========================
 # MAIN
 # =========================
+@app.route("/login", methods=["GET","POST"])
+def login():
+    if request.method == "POST":
+        user = User.query.filter_by(email=request.form["email"]).first()
+        if user and check_password_hash(user.password, request.form["password"]):
+            login_user(user)
+            return redirect("/")
+    return """
+    <h2>Login</h2>
+    <form method="post">
+    <input name="email" placeholder="Email"><br><br>
+    <input name="password" type="password" placeholder="Password"><br><br>
+    <button>Login</button>
+    </form>
+    <a href="/register">Register</a>
+    """
+
+@app.route("/register", methods=["GET","POST"])
+def register():
+    if request.method == "POST":
+        if User.query.filter_by(email=request.form["email"]).first():
+            return "Email already exists"
+
+        user = User(
+            email=request.form["email"],
+            password=generate_password_hash(request.form["password"])
+        )
+        db.session.add(user)
+        db.session.commit()
+
+        return redirect("/login")
+
+    return """
+    <h2>Register</h2>
+    <form method="post">
+    <input name="email"><br><br>
+    <input name="password" type="password"><br><br>
+    <button>Register</button>
+    </form>
+    """
+
+@app.route("/logout")
+def logout():
+    logout_user()
+    return redirect("/login")
+    
 @app.route("/", methods=["GET","POST"])
+@login_required
 def home():
     if request.method=="POST":
 
@@ -544,6 +610,8 @@ def pdf():
 # =========================
 # RUN
 # =========================
+with app.app_context():
+    db.create_all()
 if __name__=="__main__":
     port=int(os.environ.get("PORT",5000))
     app.run(host="0.0.0.0",port=port)
