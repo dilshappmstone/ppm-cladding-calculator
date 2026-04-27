@@ -12,7 +12,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'ppm_secret'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -452,7 +452,7 @@ def home():
         gst = subtotal*GST_RATE
         total = subtotal+gst
 
-        # ✅ FIXED INDENTATION (INSIDE POST BLOCK)
+        
         result = {
             "product_name": p["name"],
             "size": p["size"],
@@ -610,8 +610,9 @@ def pdf():
 # =========================
 # RUN
 # =========================
-with app.app_context():
-    db.create_all()
-if __name__=="__main__":
-    port=int(os.environ.get("PORT",5000))
-    app.run(host="0.0.0.0",port=port)
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
