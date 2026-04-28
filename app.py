@@ -402,7 +402,31 @@ def register():
     <button>Register</button>
     </form>
     """
+    
+@app.route("/login", methods=["GET","POST"])
+def login():
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
 
+        user = User.query.filter_by(email=email).first()
+
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            return redirect("/")
+
+        return "Invalid login"
+
+    return """
+    <h2>Login</h2>
+    <form method="post">
+    <input name="email" placeholder="Email"><br><br>
+    <input name="password" type="password" placeholder="Password"><br><br>
+    <button>Login</button>
+    </form>
+    <a href="/register">Register</a>
+    """
+    
 @app.route("/logout")
 def logout():
     logout_user()
