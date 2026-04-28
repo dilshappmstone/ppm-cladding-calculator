@@ -31,6 +31,14 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
 
+class Quote(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer)
+    customer = db.Column(db.String(100))
+    project = db.Column(db.String(100))
+    total = db.Column(db.Float)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -199,6 +207,13 @@ function toggleFields(){
 <body>
 
 <div class="container">
+
+<div style="margin-bottom:20px;">
+<a href="/">Home</a> |
+<a href="/quote">Quote</a> |
+<a href="/history">History</a> |
+<a href="/logout">Logout</a>
+</div>
 
 <h1>PPM Cladding Calculator</h1>
 <p class="subtitle">Estimate quantities & generate professional quotes</p>
@@ -370,7 +385,7 @@ Corner: {{result.corner_pcs}} pcs × ${{"{:,.2f}".format(result.corner_rate)}}
 """
 
 # =========================
-# MAIN
+# AUTH
 # =========================
 @app.route("/register", methods=["GET","POST"])
 def register():
@@ -397,12 +412,13 @@ def register():
     return """
     <h2>Register</h2>
     <form method="post">
-    <input name="email" placeholder="Email"><br><br>
-    <input name="password" type="password" placeholder="Password"><br><br>
+    <input name="email"><br><br>
+    <input name="password" type="password"><br><br>
     <button>Register</button>
     </form>
     """
-    
+
+
 @app.route("/login", methods=["GET","POST"])
 def login():
     if request.method == "POST":
@@ -420,21 +436,42 @@ def login():
     return """
     <h2>Login</h2>
     <form method="post">
-    <input name="email" placeholder="Email"><br><br>
-    <input name="password" type="password" placeholder="Password"><br><br>
+    <input name="email"><br><br>
+    <input name="password" type="password"><br><br>
     <button>Login</button>
     </form>
     <a href="/register">Register</a>
     """
-    
+
+
 @app.route("/logout")
+@login_required
 def logout():
     logout_user()
     return redirect("/login")
-    
-@app.route("/", methods=["GET","POST"])
+
+
+# =========================
+# HOME (NEW)
+# =========================
+@app.route("/")
 @login_required
 def home():
+    return """
+    <h2>PPM Dashboard</h2>
+    <p>Welcome! Use navigation:</p>
+    <a href="/quote">Go to Calculator</a><br><br>
+    <a href="/history">View Quote History</a>
+    """
+
+
+# =========================
+# QUOTE (YOUR CALCULATOR MOVED HERE)
+# =========================
+@app.route("/quote", methods=["GET","POST"])
+@login_required
+def quote():
+
     if request.method=="POST":
 
         typ = request.form.get("type")
@@ -477,51 +514,59 @@ def home():
         gst = subtotal*GST_RATE
         total = subtotal+gst
 
-        
+        # ✅ SAVE QUOTE
+        db.session.add(Quote(
+            user_id=current_user.id,
+            customer=request.form.get("customer"),
+            project=request.form.get("project"),
+            total=round(total,2)
+        ))
+        db.session.commit()
+
         result = {
-            "product_name": p["name"],
-            "size": p["size"],
-            "body_code": p["body_code"],
-            "corner_code": p["corner_code"],
-
-            "type": typ or "",
-            "length": length or 0,
-            "height": height or 0,
-            "corner_lm": corner_lm or 0,
-            "pillar_height": ph or 0,
-            "front": front or 0,
-            "depth": depth or 0,
-            "sides": sides or 0,
-
-            "area_waste": round(area_waste, 2),
-            "corner_pcs": corner_pcs,
-
-            "body_rate": p["body_price"],
-            "corner_rate": p["corner_price"],
-
-            "body_total": round(body_total, 2),
-            "corner_total": round(corner_total, 2),
-
-            "install": request.form.get("install"),
-            "install_body": round(install_body, 2),
-            "install_corner": round(install_corner, 2),
-
-            "subtotal": round(subtotal, 2),
-            "gst": round(gst, 2),
-            "total": round(total, 2),
-
-            "customer": request.form.get("customer") or "",
-            "project": request.form.get("project") or "",
-            "address": request.form.get("address") or "",
-
-            "total_area": round(total_area, 2),
-            "corner_area": round(corner_area, 2),
-            "net_area": round(net_area, 2)
+            "total": round(total,2),
+            "customer": request.form.get("customer"),
+            "project": request.form.get("project")
         }
 
         return render_template_string(HTML, result=result, products=PRODUCTS)
 
     return render_template_string(HTML, result=None, products=PRODUCTS)
+
+
+# =========================
+# HISTORY (DASHBOARD)
+# =========================
+@app.route("/history")
+@login_required
+def history():
+
+    quotes = Quote.query.filter_by(user_id=current_user.id).all()
+
+    rows = ""
+    for q in quotes:
+        rows += f"""
+        <tr>
+            <td>{q.customer}</td>
+            <td>{q.project}</td>
+            <td>${q.total}</td>
+        </tr>
+        """
+
+    return f"""
+    <h2>Quote History</h2>
+
+    <table border="1" cellpadding="10">
+        <tr>
+            <th>Customer</th>
+            <th>Project</th>
+            <th>Total</th>
+        </tr>
+        {rows}
+    </table>
+
+    <br><a href="/quote">Back to Calculator</a>
+    """
 
 # =========================
 # PDF
