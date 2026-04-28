@@ -85,7 +85,6 @@ body {
     background:#f4f6f8;
     margin:0;
 }
-
 .container {
     max-width:950px;
     margin:30px auto;
@@ -94,112 +93,99 @@ body {
     border-radius:10px;
     box-shadow:0 6px 20px rgba(0,0,0,0.08);
 }
-
-h1 {
-    margin-bottom:5px;
-}
-
-.subtitle {
-    color:#666;
-    margin-bottom:25px;
-}
-
-.section {
-    margin-bottom:25px;
-}
-
-label {
-    font-weight:600;
-    display:block;
-    margin-top:12px;
-}
-
+.section { margin-bottom:25px; }
+label { font-weight:600; display:block; margin-top:12px; }
 input, select, textarea {
-    width:100%;
-    padding:12px;
-    border:1px solid #ccc;
-    border-radius:6px;
-    margin-top:5px;
+    width:100%; padding:12px; border:1px solid #ccc;
+    border-radius:6px; margin-top:5px;
 }
-
-.row {
-    display:flex;
-    gap:15px;
-}
-
-.row > div {
-    flex:1;
-}
-
-@media(max-width:768px){
-    .row {flex-direction:column;}
-}
-
-.switch {
-  position: relative;
-  width: 50px;
-  height: 26px;
-}
-
-.switch input {display:none;}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  background: #ccc;
-  border-radius: 30px;
-  top:0;left:0;right:0;bottom:0;
-}
-
-.slider:before {
-  content:"";
-  position:absolute;
-  height:20px;
-  width:20px;
-  left:3px;
-  bottom:3px;
-  background:white;
-  border-radius:50%;
-}
-
-input:checked + .slider {
-  background:black;
-}
-
-input:checked + .slider:before {
-  transform: translateX(24px);
-}
-
 button {
-    margin-top:20px;
-    width:100%;
-    padding:14px;
-    background:black;
-    color:white;
-    border:none;
-    border-radius:6px;
-    font-size:16px;
+    margin-top:20px; width:100%; padding:14px;
+    background:black; color:white; border:none;
+    border-radius:6px; font-size:16px;
 }
-
-.result {
-    margin-top:30px;
-    background:#f9fafb;
-    padding:20px;
-    border-radius:8px;
+.area-box {
     border:1px solid #ddd;
+    padding:15px;
+    margin-top:10px;
+    border-radius:8px;
+    background:#fafafa;
 }
 </style>
 
 <script>
-function toggleFields(){
- let t=document.getElementById("type").value;
+let areaCount = 0;
 
- document.getElementById("wall").style.display =
-    (t=="wall"||t=="floor")?"block":"none";
+function addArea() {
+    areaCount++;
 
- document.getElementById("pillar").style.display =
-    (t=="pillar")?"block":"none";
+    let html = `
+    <div class="area-box">
+        <b>Area ${areaCount}</b>
+
+        <label>Type</label>
+        <select name="type_${areaCount}">
+            <option value="wall">Wall</option>
+            <option value="floor">Floor</option>
+            <option value="pillar">Pillar</option>
+            <option value="curve">Curve Wall</option>
+        </select>
+
+        <label>Length / Width</label>
+        <input name="length_${areaCount}">
+
+        <label>Height</label>
+        <input name="height_${areaCount}">
+
+        <label>Corner LM</label>
+        <input name="corner_${areaCount}">
+
+        <hr>
+
+        <b>Pillar</b>
+
+        <label>Pillar Height</label>
+        <input name="pillar_height_${areaCount}">
+
+        <label>Front Width</label>
+        <input name="front_${areaCount}">
+
+        <label>Depth</label>
+        <input name="depth_${areaCount}">
+
+        <label>Sides</label>
+        <select name="sides_${areaCount}">
+            <option value="3">3</option>
+            <option value="4">4</option>
+        </select>
+
+        <hr>
+
+        <b>Curve Wall</b>
+
+        <label>Enter Value</label>
+        <input name="curve_value_${areaCount}">
+
+        <label>Mode</label>
+        <select name="curve_mode_${areaCount}">
+            <option value="radius">Radius</option>
+            <option value="diameter">Diameter</option>
+        </select>
+
+        <label>Curve Type</label>
+        <select name="curve_type_${areaCount}">
+            <option value="half">Half</option>
+            <option value="quarter">Quarter</option>
+        </select>
+    </div>
+    `;
+
+    document.getElementById("areas").insertAdjacentHTML("beforeend", html);
 }
+
+window.onload = function() {
+    addArea();
+};
 </script>
 
 </head>
@@ -216,56 +202,14 @@ function toggleFields(){
 </div>
 
 <h1>PPM Cladding Calculator</h1>
-<p class="subtitle">Estimate quantities & generate professional quotes</p>
+<p>Estimate quantities & generate professional quotes</p>
 
 <form method="post">
 
 <div class="section">
-<label>Application Type</label>
-<select name="type" id="type" onchange="toggleFields()">
-<option value="">Select Type</option>
-<option value="wall">Wall</option>
-<option value="floor">Floor</option>
-<option value="pillar">Pillar</option>
-</select>
-</div>
-
-<div id="wall" class="section" style="display:none;">
-<div class="row">
-<div>
-<label>Length (m)</label>
-<input name="length">
-</div>
-<div>
-<label>Height / Width (m)</label>
-<input name="height">
-</div>
-</div>
-
-<label>Corner Length (LM)</label>
-<input name="corner_lm">
-</div>
-
-<div id="pillar" class="section" style="display:none;">
-<div class="row">
-<div>
-<label>Pillar Height</label>
-<input name="pillar_height">
-</div>
-<div>
-<label>Front Width</label>
-<input name="front">
-</div>
-</div>
-
-<label>Return Depth</label>
-<input name="depth">
-
-<label>Sides</label>
-<select name="sides">
-<option value="3">3 sides</option>
-<option value="4">4 sides</option>
-</select>
+<label>Project Areas</label>
+<button type="button" onclick="addArea()">+ Add Area</button>
+<div id="areas"></div>
 </div>
 
 <div class="section">
@@ -280,13 +224,8 @@ function toggleFields(){
 </div>
 
 <div class="section">
-<div style="display:flex; justify-content:space-between; align-items:center;">
-<span>Include Installation</span>
-<label class="switch">
+<label>Include Installation</label>
 <input type="checkbox" name="install">
-<span class="slider"></span>
-</label>
-</div>
 </div>
 
 <div class="section">
@@ -307,67 +246,8 @@ function toggleFields(){
 {% if result %}
 <div class="result">
 
-<h3>Project Details</h3>
-
-<p><b>Customer:</b> {{result.customer}}</p>
-<p><b>Project:</b> {{result.project}}</p>
-<p><b>Address:</b> {{result.address}}</p>
-
-<hr>
-
-<h3>Input Details</h3>
-
-<p><b>Application Type:</b> {{result.type}}</p>
-
-{% if result.type == "wall" or result.type == "floor" %}
-<p><b>Length:</b> {{"%.2f"|format(result.length)}} m</p>
-<p><b>Height / Width:</b> {{"%.2f"|format(result.height)}} m</p>
-<p><b>Corner Length:</b> {{"%.2f"|format(result.corner_lm)}} LM</p>
-{% endif %}
-
-{% if result.type == "pillar" %}
-<p><b>Pillar Height:</b> {{"%.2f"|format(result.pillar_height)}} m</p>
-<p><b>Front Width:</b> {{"%.2f"|format(result.front)}} m</p>
-<p><b>Depth:</b> {{"%.2f"|format(result.depth)}} m</p>
-<p><b>Sides:</b> {{result.sides}}</p>
-{% endif %}
-
-<hr>
-
-<h3>Calculation</h3>
-
-<p><b>Total Area:</b> {{"%.2f"|format(result.total_area)}} m²</p>
-<p><b>Corner Deduction:</b> {{"%.2f"|format(result.corner_area)}} m²</p>
-<p><b>Net Area:</b> {{"%.2f"|format(result.net_area)}} m²</p>
-<p><b>With Wastage:</b> {{"%.2f"|format(result.area_waste)}} m²</p>
-
-<hr>
-
-<h3>Cost Breakdown</h3>
-
-<p>
-Body: {{"%.2f"|format(result.area_waste)}} × ${{"{:,.2f}".format(result.body_rate)}} 
-= <b>${{"{:,.2f}".format(result.body_total)}}</b>
-</p>
-
-<p>
-Corner: {{result.corner_pcs}} pcs × ${{"{:,.2f}".format(result.corner_rate)}} 
-= <b>${{"{:,.2f}".format(result.corner_total)}}</b>
-</p>
-
-{% if result.install %}
-<p>Installation Body: <b>${{"{:,.2f}".format(result.install_body)}}</b></p>
-<p>Installation Corner: <b>${{"{:,.2f}".format(result.install_corner)}}</b></p>
-{% endif %}
-
-<hr>
-
-<h3>Totals</h3>
-
-<p>Subtotal: ${{"{:,.2f}".format(result.subtotal)}}</p>
-<p>GST (10%): ${{"{:,.2f}".format(result.gst)}}</p>
-
-<h2>Total (Inc GST): ${{"{:,.2f}".format(result.total)}}</h2>
+<h3>Total Area: {{result.total_area}} m²</h3>
+<h2>Total: ${{result.total}}</h2>
 
 <form method="post" action="/pdf">
 {% for k,v in result.items() %}
@@ -474,33 +354,100 @@ def quote():
 
     if request.method=="POST":
 
-        typ = request.form.get("type")
         p = PRODUCTS.get(request.form.get("product"))
 
-        length=float(request.form.get("length") or 0)
-        height=float(request.form.get("height") or 0)
-        corner_lm=float(request.form.get("corner_lm") or 0)
+        total_area = 0
+        total_corner_lm = 0
 
-        ph=float(request.form.get("pillar_height") or 0)
-        front=float(request.form.get("front") or 0)
-        depth=float(request.form.get("depth") or 0)
-        sides=int(request.form.get("sides") or 3)
+        # ================= MULTI AREA =================
+        i = 1
+        found_multi = False
 
-        if typ in ["wall","floor"]:
-            total_area = length * height
-        else:
-            if sides == 4:
-                total_area = ph*(2*front + 2*depth)
-                corner_lm = ph*4
+        while True:
+            if f"type_{i}" not in request.form:
+                break
+
+            found_multi = True
+
+            typ = request.form.get(f"type_{i}")
+
+            length = float(request.form.get(f"length_{i}") or 0)
+            height = float(request.form.get(f"height_{i}") or 0)
+            corner = float(request.form.get(f"corner_{i}") or 0)
+
+            ph = float(request.form.get(f"pillar_height_{i}") or 0)
+            front = float(request.form.get(f"front_{i}") or 0)
+            depth = float(request.form.get(f"depth_{i}") or 0)
+            sides = int(request.form.get(f"sides_{i}") or 3)
+
+            # ===== TYPE LOGIC =====
+            if typ in ["wall","floor"]:
+                area = length * height
+
+            elif typ == "pillar":
+                if sides == 4:
+                    area = ph * (2*front + 2*depth)
+                    corner = ph * 4
+                else:
+                    area = ph * (front + 2*depth)
+                    corner = ph * 2
+
+            elif typ == "curve":
+                value = float(request.form.get(f"curve_value_{i}") or 0)
+                mode = request.form.get(f"curve_mode_{i}")
+                curve_type = request.form.get(f"curve_type_{i}")
+
+                if mode == "diameter":
+                    r = value / 2
+                else:
+                    r = value
+
+                if curve_type == "half":
+                    arc = math.pi * r
+                else:
+                    arc = (math.pi * r) / 2
+
+                area = arc * height
+
             else:
-                total_area = ph*(front + 2*depth)
-                corner_lm = ph*2
+                area = 0
 
-        corner_area = corner_lm*(2*CORNER_RETURN)
+            total_area += area
+            total_corner_lm += corner
+
+            i += 1
+
+        # ================= SINGLE AREA (YOUR ORIGINAL) =================
+        if not found_multi:
+
+            typ = request.form.get("type")
+
+            length=float(request.form.get("length") or 0)
+            height=float(request.form.get("height") or 0)
+            corner_lm=float(request.form.get("corner_lm") or 0)
+
+            ph=float(request.form.get("pillar_height") or 0)
+            front=float(request.form.get("front") or 0)
+            depth=float(request.form.get("depth") or 0)
+            sides=int(request.form.get("sides") or 3)
+
+            if typ in ["wall","floor"]:
+                total_area = length * height
+                total_corner_lm = corner_lm
+            else:
+                if sides == 4:
+                    total_area = ph*(2*front + 2*depth)
+                    total_corner_lm = ph*4
+                else:
+                    total_area = ph*(front + 2*depth)
+                    total_corner_lm = ph*2
+
+        # ================= CALCULATION =================
+        corner_area = total_corner_lm*(2*CORNER_RETURN)
         net_area = max(total_area-corner_area,0)
         area_waste = net_area*1.1
 
-        corner_pcs = math.ceil(corner_lm/PIECE_HEIGHT)
+        corner_pcs = math.ceil(total_corner_lm/PIECE_HEIGHT)
 
         body_total = area_waste*p["body_price"]
         corner_total = corner_pcs*p["corner_price"]
@@ -508,27 +455,28 @@ def quote():
         install_body = install_corner = 0
         if request.form.get("install"):
             install_body = area_waste*INSTALL_BODY_RATE
-            install_corner = corner_lm*INSTALL_CORNER_RATE
+            install_corner = total_corner_lm*INSTALL_CORNER_RATE
 
         subtotal = body_total+corner_total+install_body+install_corner
         gst = subtotal*GST_RATE
         total = subtotal+gst
 
-        # ✅ CREATE RESULT FIRST
+        # ================= RESULT =================
         result = {
             "product_name": p["name"],
             "size": p["size"],
             "body_code": p["body_code"],
             "corner_code": p["corner_code"],
 
-            "type": typ or "",
-            "length": length or 0,
-            "height": height or 0,
-            "corner_lm": corner_lm or 0,
-            "pillar_height": ph or 0,
-            "front": front or 0,
-            "depth": depth or 0,
-            "sides": sides or 0,
+            "type": request.form.get("type") or "",
+            "length": float(request.form.get("length") or 0),
+            "height": float(request.form.get("height") or 0),
+            "corner_lm": total_corner_lm,
+
+            "pillar_height": float(request.form.get("pillar_height") or 0),
+            "front": float(request.form.get("front") or 0),
+            "depth": float(request.form.get("depth") or 0),
+            "sides": int(request.form.get("sides") or 3),
 
             "area_waste": round(area_waste, 2),
             "corner_pcs": corner_pcs,
@@ -556,7 +504,7 @@ def quote():
             "net_area": round(net_area, 2)
         }
 
-        # ✅ SAVE AFTER result exists
+        # ================= SAVE =================
         db.session.add(Quote(
             user_id=current_user.id,
             customer=result["customer"],
