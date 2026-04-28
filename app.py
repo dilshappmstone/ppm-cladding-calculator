@@ -246,6 +246,39 @@ window.onload = function() {
 {% if result %}
 <div class="result">
 
+<h3>Project Summary</h3>
+
+<p><b>Customer:</b> {{result.customer}}</p>
+<p><b>Project:</b> {{result.project}}</p>
+
+<hr>
+
+<h3>Areas</h3>
+
+{% for a in result.areas %}
+<div style="border:1px solid #ddd; padding:10px; margin-bottom:10px; border-radius:6px;">
+    
+    <b>Type:</b> {{a.type}}<br>
+
+    {% if a.type == "wall" or a.type == "floor" %}
+    Length: {{a.length}} m<br>
+    Height: {{a.height}} m<br>
+    Corner: {{a.corner}}<br>
+    {% endif %}
+
+    {% if a.type == "pillar" %}
+    Pillar Height: {{a.pillar_height}} m<br>
+    Front: {{a.front}} m<br>
+    Depth: {{a.depth}} m<br>
+    {% endif %}
+
+    <b>Area:</b> {{a.area}} m²
+
+</div>
+{% endfor %}
+
+<hr>
+
 <h3>Total Area: {{result.total_area}} m²</h3>
 <h2>Total: ${{result.total}}</h2>
 
@@ -360,63 +393,70 @@ def quote():
         total_corner_lm = 0
 
         # ================= MULTI AREA =================
-        i = 1
-        found_multi = False
+i = 1
+found_multi = False
+area_list = []
 
-        while True:
-            if f"type_{i}" not in request.form:
-                break
+while True:
+    if f"type_{i}" not in request.form:
+        break
 
-            found_multi = True
+    found_multi = True
 
-            typ = request.form.get(f"type_{i}")
+    typ = request.form.get(f"type_{i}")
 
-            length = float(request.form.get(f"length_{i}") or 0)
-            height = float(request.form.get(f"height_{i}") or 0)
-            corner = float(request.form.get(f"corner_{i}") or 0)
+    length = float(request.form.get(f"length_{i}") or 0)
+    height = float(request.form.get(f"height_{i}") or 0)
+    corner = float(request.form.get(f"corner_{i}") or 0)
 
-            ph = float(request.form.get(f"pillar_height_{i}") or 0)
-            front = float(request.form.get(f"front_{i}") or 0)
-            depth = float(request.form.get(f"depth_{i}") or 0)
-            sides = int(request.form.get(f"sides_{i}") or 3)
+    ph = float(request.form.get(f"pillar_height_{i}") or 0)
+    front = float(request.form.get(f"front_{i}") or 0)
+    depth = float(request.form.get(f"depth_{i}") or 0)
+    sides = int(request.form.get(f"sides_{i}") or 3)
 
-            # ===== TYPE LOGIC =====
-            if typ in ["wall","floor"]:
-                area = length * height
+    # ===== TYPE LOGIC =====
+    if typ in ["wall","floor"]:
+        area = length * height
 
-            elif typ == "pillar":
-                if sides == 4:
-                    area = ph * (2*front + 2*depth)
-                    corner = ph * 4
-                else:
-                    area = ph * (front + 2*depth)
-                    corner = ph * 2
+    elif typ == "pillar":
+        if sides == 4:
+            area = ph * (2*front + 2*depth)
+            corner = ph * 4
+        else:
+            area = ph * (front + 2*depth)
+            corner = ph * 2
 
-            elif typ == "curve":
-                value = float(request.form.get(f"curve_value_{i}") or 0)
-                mode = request.form.get(f"curve_mode_{i}")
-                curve_type = request.form.get(f"curve_type_{i}")
+    elif typ == "curve":
+        value = float(request.form.get(f"curve_value_{i}") or 0)
+        mode = request.form.get(f"curve_mode_{i}")
+        curve_type = request.form.get(f"curve_type_{i}")
 
-                if mode == "diameter":
-                    r = value / 2
-                else:
-                    r = value
+        r = value / 2 if mode == "diameter" else value
 
-                if curve_type == "half":
-                    arc = math.pi * r
-                else:
-                    arc = (math.pi * r) / 2
+        arc = math.pi * r if curve_type == "half" else (math.pi * r)/2
+        area = arc * height
 
-                area = arc * height
+    else:
+        area = 0
 
-            else:
-                area = 0
+    total_area += area
+    total_corner_lm += corner
 
-            total_area += area
-            total_corner_lm += corner
+    # ✅ STORE AREA DETAILS
+    area_list.append({
+        "type": typ,
+        "length": length,
+        "height": height,
+        "corner": corner,
+        "pillar_height": ph,
+        "front": front,
+        "depth": depth,
+        "sides": sides,
+        "area": round(area, 2)
+    })
 
-            i += 1
-
+    i += 1
+    
         # ================= SINGLE AREA (YOUR ORIGINAL) =================
         if not found_multi:
 
@@ -467,6 +507,7 @@ def quote():
             "size": p["size"],
             "body_code": p["body_code"],
             "corner_code": p["corner_code"],
+            "areas": area_list,
 
             "type": request.form.get("type") or "",
             "length": float(request.form.get("length") or 0),
