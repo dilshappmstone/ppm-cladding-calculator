@@ -94,22 +94,61 @@ body {
     box-shadow:0 6px 20px rgba(0,0,0,0.08);
 }
 .section { margin-bottom:25px; }
-label { font-weight:600; display:block; margin-top:12px; }
+
+label {
+    font-weight:600;
+    display:block;
+    margin-top:10px;
+}
+
 input, select, textarea {
-    width:100%; padding:12px; border:1px solid #ccc;
-    border-radius:6px; margin-top:5px;
+    width:100%;
+    padding:10px;
+    border:1px solid #ccc;
+    border-radius:6px;
+    margin-top:5px;
 }
+
 button {
-    margin-top:20px; width:100%; padding:14px;
-    background:black; color:white; border:none;
-    border-radius:6px; font-size:16px;
+    margin-top:15px;
+    padding:12px;
+    background:black;
+    color:white;
+    border:none;
+    border-radius:6px;
+    font-size:15px;
+    cursor:pointer;
 }
+
+.add-btn {
+    background:#2d7ef7;
+}
+
+.remove-btn {
+    background:#d9534f;
+    margin-top:10px;
+}
+
 .area-box {
     border:1px solid #ddd;
     padding:15px;
-    margin-top:10px;
+    margin-top:15px;
     border-radius:8px;
     background:#fafafa;
+}
+
+.area-title {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.result {
+    margin-top:30px;
+    padding:20px;
+    background:#f9fafb;
+    border-radius:8px;
+    border:1px solid #ddd;
 }
 </style>
 
@@ -120,67 +159,103 @@ function addArea() {
     areaCount++;
 
     let html = `
-    <div class="area-box">
-        <b>Area ${areaCount}</b>
+    <div class="area-box" id="area_${areaCount}">
+
+        <div class="area-title">
+            <b>Area ${areaCount}</b>
+            <button type="button" class="remove-btn" onclick="removeArea(${areaCount})">Remove</button>
+        </div>
 
         <label>Type</label>
-        <select name="type_${areaCount}">
+        <select name="type_${areaCount}" onchange="toggleArea(${areaCount}, this.value)">
+            <option value="">Select Type</option>
             <option value="wall">Wall</option>
             <option value="floor">Floor</option>
             <option value="pillar">Pillar</option>
             <option value="curve">Curve Wall</option>
         </select>
 
-        <label>Length / Width</label>
-        <input name="length_${areaCount}">
+        <!-- WALL -->
+        <div id="wall_${areaCount}" style="display:none;">
+            <h4>Wall / Floor</h4>
 
-        <label>Height</label>
-        <input name="height_${areaCount}">
+            <label>Length (m)</label>
+            <input name="length_${areaCount}">
 
-        <label>Corner LM</label>
-        <input name="corner_${areaCount}">
+            <label>Height (m)</label>
+            <input name="height_${areaCount}">
 
-        <hr>
+            <label>Corner LM</label>
+            <input name="corner_${areaCount}">
+        </div>
 
-        <b>Pillar</b>
+        <!-- PILLAR -->
+        <div id="pillar_${areaCount}" style="display:none;">
+            <h4>Pillar</h4>
 
-        <label>Pillar Height</label>
-        <input name="pillar_height_${areaCount}">
+            <label>Pillar Height</label>
+            <input name="pillar_height_${areaCount}">
 
-        <label>Front Width</label>
-        <input name="front_${areaCount}">
+            <label>Front Width</label>
+            <input name="front_${areaCount}">
 
-        <label>Depth</label>
-        <input name="depth_${areaCount}">
+            <label>Depth</label>
+            <input name="depth_${areaCount}">
 
-        <label>Sides</label>
-        <select name="sides_${areaCount}">
-            <option value="3">3</option>
-            <option value="4">4</option>
-        </select>
+            <label>Sides</label>
+            <select name="sides_${areaCount}">
+                <option value="3">3</option>
+                <option value="4">4</option>
+            </select>
+        </div>
 
-        <hr>
+        <!-- CURVE -->
+        <div id="curve_${areaCount}" style="display:none;">
+            <h4>Curve Wall</h4>
 
-        <b>Curve Wall</b>
+            <label>Value</label>
+            <input name="curve_value_${areaCount}">
 
-        <label>Enter Value</label>
-        <input name="curve_value_${areaCount}">
+            <label>Mode</label>
+            <select name="curve_mode_${areaCount}">
+                <option value="radius">Radius</option>
+                <option value="diameter">Diameter</option>
+            </select>
 
-        <label>Mode</label>
-        <select name="curve_mode_${areaCount}">
-            <option value="radius">Radius</option>
-            <option value="diameter">Diameter</option>
-        </select>
+            <label>Curve Type</label>
+            <select name="curve_type_${areaCount}">
+                <option value="half">Half</option>
+                <option value="quarter">Quarter</option>
+            </select>
 
-        <label>Curve Type</label>
-        <select name="curve_type_${areaCount}">
-            <option value="half">Half</option>
-            <option value="quarter">Quarter</option>
-        </select>
+            <label>Height</label>
+            <input name="height_${areaCount}">
+        </div>
+
     </div>
     `;
 
     document.getElementById("areas").insertAdjacentHTML("beforeend", html);
+}
+
+function removeArea(id){
+    document.getElementById("area_" + id).remove();
+}
+
+function toggleArea(id, type) {
+    document.getElementById("wall_" + id).style.display = "none";
+    document.getElementById("pillar_" + id).style.display = "none";
+    document.getElementById("curve_" + id).style.display = "none";
+
+    if (type === "wall" || type === "floor") {
+        document.getElementById("wall_" + id).style.display = "block";
+    }
+    else if (type === "pillar") {
+        document.getElementById("pillar_" + id).style.display = "block";
+    }
+    else if (type === "curve") {
+        document.getElementById("curve_" + id).style.display = "block";
+    }
 }
 
 window.onload = function() {
@@ -208,7 +283,7 @@ window.onload = function() {
 
 <div class="section">
 <label>Project Areas</label>
-<button type="button" onclick="addArea()">+ Add Area</button>
+<button type="button" class="add-btn" onclick="addArea()">+ Add Area</button>
 <div id="areas"></div>
 </div>
 
@@ -279,8 +354,42 @@ window.onload = function() {
 
 <hr>
 
-<h3>Total Area: {{result.total_area}} m²</h3>
-<h2>Total: ${{result.total}}</h2>
+<hr>
+
+<h3>Calculation Summary</h3>
+
+<p><b>Total Area:</b> {{result.total_area}} m²</p>
+<p><b>Corner Deduction:</b> {{result.corner_area}} m²</p>
+<p><b>Net Area:</b> {{result.net_area}} m²</p>
+<p><b>Area with Wastage (10%):</b> {{result.area_waste}} m²</p>
+
+<hr>
+
+<h3>Cost Breakdown</h3>
+
+<p>
+Body: {{result.area_waste}} × ${{result.body_rate}}  
+= <b>${{result.body_total}}</b>
+</p>
+
+<p>
+Corner: {{result.corner_pcs}} pcs × ${{result.corner_rate}}  
+= <b>${{result.corner_total}}</b>
+</p>
+
+{% if result.install %}
+<p>Installation Body: <b>${{result.install_body}}</b></p>
+<p>Installation Corner: <b>${{result.install_corner}}</b></p>
+{% endif %}
+
+<hr>
+
+<h3>Totals</h3>
+
+<p>Subtotal: ${{result.subtotal}}</p>
+<p>GST (10%): ${{result.gst}}</p>
+
+<h2>Total (Inc GST): ${{result.total}}</h2>
 
 <form method="post" action="/pdf">
 {% for k,v in result.items() %}
