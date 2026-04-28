@@ -1,26 +1,31 @@
-from flask import Flask, request, render_template_string, send_file
+from flask import Flask, request, render_template_string, send_file, redirect
 import math, io, os
 from datetime import datetime
 
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+from reportlab.lib.enums import TA_CENTER
+
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
+app = Flask(__name__)
+
+# ================= CONFIG =================
 app.config['SECRET_KEY'] = 'ppm_secret'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/data.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# ================= INIT =================
 db = SQLAlchemy(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
-# ✅ ONLY ONE USER MODEL
+# ================= MODEL =================
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
@@ -30,7 +35,7 @@ class User(db.Model, UserMixin):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# ✅ CREATE TABLES SAFELY
+# ================= CREATE DB =================
 with app.app_context():
     db.create_all()
 
