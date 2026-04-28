@@ -14,10 +14,14 @@ app = Flask(__name__)
 
 app.config['SECRET_KEY'] = 'ppm_secret'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/data.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
+login_manager = LoginManager(app)
 
-# ✅ MODEL FIRST
+# =========================
+# MODEL (ONLY ONCE)
+# =========================
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True)
@@ -27,7 +31,9 @@ class User(db.Model, UserMixin):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# ✅ CREATE TABLES HERE (NOT before_first_request)
+# =========================
+# CREATE TABLES (ONLY ONCE)
+# =========================
 with app.app_context():
     db.create_all()
 
@@ -43,16 +49,6 @@ GST_RATE = 0.10
 # =========================
 # PRODUCTS (WITH SIZE)
 # =========================
-
-class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(100), unique=True)
-    password = db.Column(db.String(200))
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-    
 PRODUCTS = {
     "RB": {"name": "Royal Blue", "size": "20–40mm", "body_code": "CLD005", "corner_code": "CLD006", "body_price": 75, "corner_price": 25},
     "IWQ": {"name": "Ivory White Quartz", "size": "15–30mm", "body_code": "CLD007", "corner_code": "CLD008", "body_price": 75, "corner_price": 25},
