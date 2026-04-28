@@ -31,9 +31,18 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
 
+    # NEW
+    business = db.Column(db.String(150))
+    address = db.Column(db.String(200))
+    phone = db.Column(db.String(50))
+
 class Quote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer)
+
+    # NEW
+    quote_number = db.Column(db.String(50))
+    
     customer = db.Column(db.String(100))
     project = db.Column(db.String(100))
     total = db.Column(db.Float)
@@ -187,6 +196,10 @@ button {
 
 .navbar a:hover {
     text-decoration:underline;
+}
+h4 {
+    margin-top:15px;
+    color:#333;
 }
 </style>
 
@@ -363,6 +376,7 @@ window.onload = function() {
 
 <p><b>Customer:</b> {{result.customer}}</p>
 <p><b>Project:</b> {{result.project}}</p>
+<p><b>Quote No:</b> {{result.quote_number}}</p>
 
 <hr>
 
@@ -453,33 +467,41 @@ Corner: {{result.corner_pcs}} pcs × ${{result.corner_rate}}
 # =========================
 @app.route("/register", methods=["GET","POST"])
 def register():
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
+if request.method == "POST":
+    user = User(
+        email=request.form.get("email"),
+        password=generate_password_hash(request.form.get("password")),
+        business=request.form.get("business"),
+        address=request.form.get("address"),
+        phone=request.form.get("phone")
+    )
 
-        if not email or not password:
-            return "Missing email or password"
+    db.session.add(user)
+    db.session.commit()
 
-        if User.query.filter_by(email=email).first():
-            return "User already exists"
-
-        user = User(
-            email=email,
-            password=generate_password_hash(password)
-        )
-
-        db.session.add(user)
-        db.session.commit()
-
-        return redirect("/login")
-
+    return redirect("/login")
+    
     return """
-    <h2>Register</h2>
-    <form method="post">
-    <input name="email"><br><br>
-    <input name="password" type="password"><br><br>
-    <button>Register</button>
-    </form>
+    
+<h2>Register</h2>
+<form method="post">
+
+<input name="business" placeholder="Business Name"><br><br>
+
+<input name="email" placeholder="Email"><br><br>
+
+<input name="password" type="password" placeholder="Password"><br><br>
+
+<input name="address" placeholder="Address"><br><br>
+
+<input name="phone" placeholder="Telephone Number"><br><br>
+
+<label>
+<input type="checkbox" required> Accept Terms & Conditions
+</label><br><br>
+
+<button>Register</button>
+</form>
     """
 
 
@@ -663,12 +685,15 @@ def quote():
             "customer": request.form.get("customer") or "",
             "project": request.form.get("project") or "",
             "address": request.form.get("address") or "",
+            "quote_number": quote_number,
 
             "total_area": round(total_area, 2),
             "corner_area": round(corner_area, 2),
             "net_area": round(net_area, 2)
         }
-
+        now = datetime.now()
+        count = Quote.query.count() + 1
+        quote_number = f"{now.strftime('%y%m%d')}{str(count).zfill(3)}"
 
         # ================= SAVE =================
         db.session.add(Quote(
@@ -676,7 +701,7 @@ def quote():
             customer=result["customer"],
             project=result["project"],
             total=result["total"]
-        ))
+))
         db.session.commit()
 
         return render_template_string(HTML, result=result, products=PRODUCTS)
@@ -694,29 +719,35 @@ def history():
     quotes = Quote.query.filter_by(user_id=current_user.id).all()
 
     rows = ""
-    for q in quotes:
-        rows += f"""
-        <tr>
-            <td>{q.customer}</td>
-            <td>{q.project}</td>
-            <td>${q.total}</td>
-        </tr>
-        """
-
-    return f"""
-    <h2>Quote History</h2>
-
-    <table border="1" cellpadding="10">
-        <tr>
-            <th>Customer</th>
-            <th>Project</th>
-            <th>Total</th>
-        </tr>
-        {rows}
-    </table>
-
-    <br><a href="/quote">Back to Calculator</a>
+for q in quotes:
+    rows += f"""
+    <tr>
+        <td>{q.quote_number}</td>
+        <td>{q.customer}</td>
+        <td>{q.project}</td>
+        <td>{q.date.strftime('%d/%m/%Y')}</td>
+        <td>${q.total}</td>
+        <td><a href="/quote/{q.id}">View</a></td>
+    </tr>
     """
+
+return f"""
+<h2>Quote History</h2>
+
+<table border="1" cellpadding="10">
+    <tr>
+        <th>Quote No</th>
+        <th>Customer</th>
+        <th>Project</th>
+        <th>Date</th>
+        <th>Total</th>
+        <th>Action</th>
+    </tr>
+    {rows}
+</table>
+
+<br><a href="/quote">Back</a>
+"""
 
 # =========================
 # PDF
@@ -747,7 +778,7 @@ def pdf():
     story.append(Paragraph("<b>QUOTE</b>", center))
 
     now = datetime.now()
-    story.append(Paragraph(now.strftime("Quote No: QU-%y%m%d01"), styles['Normal']))
+    story.append(Paragraph(f"Quote No: {request.form.get('quote_number')}", styles['Normal']))
     story.append(Paragraph(now.strftime("Date: %d/%m/%Y"), styles['Normal']))
 
     story.append(Spacer(1,10))
