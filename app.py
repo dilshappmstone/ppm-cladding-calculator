@@ -148,7 +148,45 @@ button {
     padding:20px;
     background:#f9fafb;
     border-radius:8px;
-    border:1px solid #ddd;
+    border:1px solid #ddd;  
+}
+
+.toggle {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:#f1f1f1;
+    padding:10px;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.toggle input {
+    width:20px;
+    height:20px;
+}
+
+.toggle input:checked + label {
+    color:green;
+    font-weight:bold;
+}
+
+.navbar {
+    background:black;
+    padding:12px;
+    border-radius:8px;
+    margin-bottom:20px;
+}
+
+.navbar a {
+    color:white;
+    margin-right:20px;
+    text-decoration:none;
+    font-weight:600;
+}
+
+.navbar a:hover {
+    text-decoration:underline;
 }
 </style>
 
@@ -193,13 +231,13 @@ function addArea() {
         <div id="pillar_${areaCount}" style="display:none;">
             <h4>Pillar</h4>
 
-            <label>Pillar Height</label>
+            <label>Pillar Height (m)</label>
             <input name="pillar_height_${areaCount}">
 
-            <label>Front Width</label>
+            <label>Front Width (m)</label>
             <input name="front_${areaCount}">
 
-            <label>Depth</label>
+            <label>Depth (m)</label>
             <input name="depth_${areaCount}">
 
             <label>Sides</label>
@@ -229,7 +267,7 @@ function addArea() {
             </select>
 
             <label>Height</label>
-            <input name="height_${areaCount}">
+            <input name="curve_height_${areaCount}">
         </div>
 
     </div>
@@ -269,11 +307,11 @@ window.onload = function() {
 
 <div class="container">
 
-<div style="margin-bottom:20px;">
-<a href="/">Home</a> |
-<a href="/quote">Quote</a> |
-<a href="/history">History</a> |
-<a href="/logout">Logout</a>
+<div class="navbar">
+    <a href="/">Dashboard</a>
+    <a href="/quote">New Quote</a>
+    <a href="/history">History</a>
+    <a href="/logout">Logout</a>
 </div>
 
 <h1>PPM Cladding Calculator</h1>
@@ -298,9 +336,9 @@ window.onload = function() {
 </select>
 </div>
 
-<div class="section">
-<label>Include Installation</label>
-<input type="checkbox" name="install">
+<div class="toggle">
+    <input type="checkbox" id="install" name="install">
+    <label for="install">Include Installation</label>
 </div>
 
 <div class="section">
@@ -345,6 +383,10 @@ window.onload = function() {
     Pillar Height: {{a.pillar_height}} m<br>
     Front: {{a.front}} m<br>
     Depth: {{a.depth}} m<br>
+    {% endif %}
+
+    {% if a.type == "curve" %}
+    Curve Height: {{a.curve_height}} m<br>
     {% endif %}
 
     <b>Area:</b> {{a.area}} m²
@@ -488,7 +530,7 @@ def home():
 
 
 # =========================
-# QUOTE (YOUR CALCULATOR MOVED HERE)
+# QUOTE (FIXED VERSION)
 # =========================
 @app.route("/quote", methods=["GET","POST"])
 @login_required
@@ -523,6 +565,8 @@ def quote():
             depth = float(request.form.get(f"depth_{i}") or 0)
             sides = int(request.form.get(f"sides_{i}") or 3)
 
+            curve_height = float(request.form.get(f"curve_height_{i}") or 0)
+
             # ===== TYPE LOGIC =====
             if typ in ["wall","floor"]:
                 area = length * height
@@ -543,7 +587,10 @@ def quote():
                 r = value / 2 if mode == "diameter" else value
                 arc = math.pi * r if curve_type == "half" else (math.pi * r)/2
 
-                area = arc * height
+                area = arc * curve_height
+
+                # 👉 OPTIONAL: treat arc as corner LM (more realistic)
+                corner = arc
 
             else:
                 area = 0
@@ -551,6 +598,7 @@ def quote():
             total_area += area
             total_corner_lm += corner
 
+            # ✅ STORE EVERYTHING
             area_list.append({
                 "type": typ,
                 "length": length,
@@ -560,36 +608,11 @@ def quote():
                 "front": front,
                 "depth": depth,
                 "sides": sides,
+                "curve_height": curve_height,
                 "area": round(area, 2)
             })
 
             i += 1
-
-
-        # ================= SINGLE AREA (fallback) =================
-        if not found_multi:
-
-            typ = request.form.get("type")
-
-            length=float(request.form.get("length") or 0)
-            height=float(request.form.get("height") or 0)
-            corner_lm=float(request.form.get("corner_lm") or 0)
-
-            ph=float(request.form.get("pillar_height") or 0)
-            front=float(request.form.get("front") or 0)
-            depth=float(request.form.get("depth") or 0)
-            sides=int(request.form.get("sides") or 3)
-
-            if typ in ["wall","floor"]:
-                total_area = length * height
-                total_corner_lm = corner_lm
-            else:
-                if sides == 4:
-                    total_area = ph*(2*front + 2*depth)
-                    total_corner_lm = ph*4
-                else:
-                    total_area = ph*(front + 2*depth)
-                    total_corner_lm = ph*2
 
 
         # ================= CALCULATION =================
