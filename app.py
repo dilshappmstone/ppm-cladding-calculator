@@ -370,33 +370,27 @@ Corner: {{result.corner_pcs}} pcs × ${{"{:,.2f}".format(result.corner_rate)}}
 # =========================
 # MAIN
 # =========================
-@app.route("/login", methods=["GET","POST"])
-def login():
-    if request.method == "POST":
-        user = User.query.filter_by(email=request.form["email"]).first()
-        if user and check_password_hash(user.password, request.form["password"]):
-            login_user(user)
-            return redirect("/")
-    return """
-    <h2>Login</h2>
-    <form method="post">
-    <input name="email" placeholder="Email"><br><br>
-    <input name="password" type="password" placeholder="Password"><br><br>
-    <button>Login</button>
-    </form>
-    <a href="/register">Register</a>
-    """
-
 @app.route("/register", methods=["GET","POST"])
 def register():
     if request.method == "POST":
-        if User.query.filter_by(email=request.form["email"]).first():
+        email = request.form.get("email")
+        password = request.form.get("password")
+
+        # 🔥 SAFETY CHECK (THIS FIXES YOUR ERROR)
+        if not email or not password:
+            return "Email and password required"
+
+        # Check if user exists
+        existing = User.query.filter_by(email=email).first()
+        if existing:
             return "Email already exists"
 
+        # Create user
         user = User(
-            email=request.form["email"],
-            password=generate_password_hash(request.form["password"])
+            email=email,
+            password=generate_password_hash(password)
         )
+
         db.session.add(user)
         db.session.commit()
 
@@ -405,8 +399,8 @@ def register():
     return """
     <h2>Register</h2>
     <form method="post">
-    <input name="email"><br><br>
-    <input name="password" type="password"><br><br>
+    <input name="email" placeholder="Email"><br><br>
+    <input name="password" type="password" placeholder="Password"><br><br>
     <button>Register</button>
     </form>
     """
