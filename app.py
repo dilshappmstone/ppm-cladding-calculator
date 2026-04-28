@@ -10,30 +10,27 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
-app = Flask(__name__)
-
 app.config['SECRET_KEY'] = 'ppm_secret'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/data.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
-login_manager = LoginManager(app)
 
-# =========================
-# MODEL (ONLY ONCE)
-# =========================
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
+
+# ✅ ONLY ONE USER MODEL
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(100), unique=True)
-    password = db.Column(db.String(200))
+    email = db.Column(db.String(100), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# =========================
-# CREATE TABLES (ONLY ONCE)
-# =========================
+# ✅ CREATE TABLES SAFELY
 with app.app_context():
     db.create_all()
 
@@ -376,16 +373,12 @@ def register():
         email = request.form.get("email")
         password = request.form.get("password")
 
-        # 🔥 SAFETY CHECK (THIS FIXES YOUR ERROR)
         if not email or not password:
-            return "Email and password required"
+            return "Missing email or password"
 
-        # Check if user exists
-        existing = User.query.filter_by(email=email).first()
-        if existing:
-            return "Email already exists"
+        if User.query.filter_by(email=email).first():
+            return "User already exists"
 
-        # Create user
         user = User(
             email=email,
             password=generate_password_hash(password)
