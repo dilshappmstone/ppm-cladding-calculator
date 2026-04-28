@@ -16,9 +16,8 @@ app.config['SECRET_KEY'] = 'ppm_secret'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/data.db'
 
 db = SQLAlchemy(app)
-login_manager = LoginManager(app)
 
-# MODEL FIRST
+# ✅ MODEL FIRST
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True)
@@ -28,9 +27,8 @@ class User(db.Model, UserMixin):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# THEN CREATE TABLES
-@app.before_first_request
-def create_tables():
+# ✅ CREATE TABLES HERE (NOT before_first_request)
+with app.app_context():
     db.create_all()
 
 # =========================
