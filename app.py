@@ -467,21 +467,37 @@ Corner: {{result.corner_pcs}} pcs × ${{result.corner_rate}}
 # =========================
 @app.route("/register", methods=["GET","POST"])
 def register():
-if request.method == "POST":
-    user = User(
-        email=request.form.get("email"),
-        password=generate_password_hash(request.form.get("password")),
-        business=request.form.get("business"),
-        address=request.form.get("address"),
-        phone=request.form.get("phone")
-    )
+    if request.method == "POST":
+        user = User(
+            email=request.form.get("email"),
+            password=generate_password_hash(request.form.get("password")),
+            business=request.form.get("business"),
+            address=request.form.get("address"),
+            phone=request.form.get("phone")
+        )
 
-    db.session.add(user)
-    db.session.commit()
+        db.session.add(user)
+        db.session.commit()
 
-    return redirect("/login")
-    
+        return redirect("/login")
+
     return """
+    <h2>Register</h2>
+    <form method="post">
+
+    <input name="business" placeholder="Business Name"><br><br>
+    <input name="email" placeholder="Email"><br><br>
+    <input name="password" type="password" placeholder="Password"><br><br>
+    <input name="address" placeholder="Address"><br><br>
+    <input name="phone" placeholder="Telephone Number"><br><br>
+
+    <label>
+    <input type="checkbox" required> Accept Terms & Conditions
+    </label><br><br>
+
+    <button>Register</button>
+    </form>
+    """
     
 <h2>Register</h2>
 <form method="post">
@@ -656,51 +672,54 @@ def quote():
         gst = subtotal*GST_RATE
         total = subtotal+gst
 
+# ================= GENERATE QUOTE NUMBER =================
+now = datetime.now()
+count = Quote.query.count() + 1
+quote_number = f"{now.strftime('%y%m%d')}{str(count).zfill(3)}"
 
-        # ================= RESULT =================
-        result = {
-            "product_name": p["name"],
-            "size": p["size"],
-            "body_code": p["body_code"],
-            "corner_code": p["corner_code"],
-            "areas": area_list,
+# ================= RESULT =================
+result = {
+    "product_name": p["name"],
+    "size": p["size"],
+    "body_code": p["body_code"],
+    "corner_code": p["corner_code"],
+    "areas": area_list,
 
-            "area_waste": round(area_waste, 2),
-            "corner_pcs": corner_pcs,
+    "area_waste": round(area_waste, 2),
+    "corner_pcs": corner_pcs,
 
-            "body_rate": p["body_price"],
-            "corner_rate": p["corner_price"],
+    "body_rate": p["body_price"],
+    "corner_rate": p["corner_price"],
 
-            "body_total": round(body_total, 2),
-            "corner_total": round(corner_total, 2),
+    "body_total": round(body_total, 2),
+    "corner_total": round(corner_total, 2),
 
-            "install": request.form.get("install"),
-            "install_body": round(install_body, 2),
-            "install_corner": round(install_corner, 2),
+    "install": request.form.get("install"),
+    "install_body": round(install_body, 2),
+    "install_corner": round(install_corner, 2),
 
-            "subtotal": round(subtotal, 2),
-            "gst": round(gst, 2),
-            "total": round(total, 2),
+    "subtotal": round(subtotal, 2),
+    "gst": round(gst, 2),
+    "total": round(total, 2),
 
-            "customer": request.form.get("customer") or "",
-            "project": request.form.get("project") or "",
-            "address": request.form.get("address") or "",
-            "quote_number": quote_number,
+    "customer": request.form.get("customer") or "",
+    "project": request.form.get("project") or "",
+    "address": request.form.get("address") or "",
 
-            "total_area": round(total_area, 2),
-            "corner_area": round(corner_area, 2),
-            "net_area": round(net_area, 2)
-        }
-        now = datetime.now()
-        count = Quote.query.count() + 1
-        quote_number = f"{now.strftime('%y%m%d')}{str(count).zfill(3)}"
+    "quote_number": quote_number,
+
+    "total_area": round(total_area, 2),
+    "corner_area": round(corner_area, 2),
+    "net_area": round(net_area, 2),
+}
 
         # ================= SAVE =================
-        db.session.add(Quote(
-            user_id=current_user.id,
-            customer=result["customer"],
-            project=result["project"],
-            total=result["total"]
+db.session.add(Quote(
+    user_id=current_user.id,
+    quote_number=quote_number,   # ✅ MUST BE HERE
+    customer=result["customer"],
+    project=result["project"],
+    total=result["total"]
 ))
         db.session.commit()
 
@@ -719,36 +738,35 @@ def history():
     quotes = Quote.query.filter_by(user_id=current_user.id).all()
 
     rows = ""
-for q in quotes:
-    rows += f"""
-    <tr>
-        <td>{q.quote_number}</td>
-        <td>{q.customer}</td>
-        <td>{q.project}</td>
-        <td>{q.date.strftime('%d/%m/%Y')}</td>
-        <td>${q.total}</td>
-        <td><a href="/quote/{q.id}">View</a></td>
-    </tr>
+    for q in quotes:
+        rows += f"""
+        <tr>
+            <td>{q.quote_number}</td>
+            <td>{q.customer}</td>
+            <td>{q.project}</td>
+            <td>{q.date.strftime('%d/%m/%Y')}</td>
+            <td>${q.total}</td>
+            <td><a href="/quote/{q.id}">View</a></td>
+        </tr>
+        """
+
+    return f"""
+    <h2>Quote History</h2>
+
+    <table border="1" cellpadding="10">
+        <tr>
+            <th>Quote No</th>
+            <th>Customer</th>
+            <th>Project</th>
+            <th>Date</th>
+            <th>Total</th>
+            <th>Action</th>
+        </tr>
+        {rows}
+    </table>
+
+    <br><a href="/quote">Back</a>
     """
-
-return f"""
-<h2>Quote History</h2>
-
-<table border="1" cellpadding="10">
-    <tr>
-        <th>Quote No</th>
-        <th>Customer</th>
-        <th>Project</th>
-        <th>Date</th>
-        <th>Total</th>
-        <th>Action</th>
-    </tr>
-    {rows}
-</table>
-
-<br><a href="/quote">Back</a>
-"""
-
 # =========================
 # PDF
 # =========================
