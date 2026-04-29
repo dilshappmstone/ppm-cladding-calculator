@@ -1109,6 +1109,25 @@ th, td {{
 tr:nth-child(even) {{
     background:#f3f4f6;
 }}
+.top-bar {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+}
+
+.btn-back {
+    padding:10px 16px;
+    background:#111;
+    color:white;
+    border-radius:8px;
+    text-decoration:none;
+    font-weight:600;
+}
+
+.btn-back:hover {
+    background:#333;
+}
 </style>
 </head>
 
@@ -1116,7 +1135,7 @@ tr:nth-child(even) {{
 
 <div class="card">
 <h2>Quote History</h2>
-
+<a href="/" class="btn-back">← Dashboard</a>
 <table>
 <tr>
 <th>Quote No</th>
