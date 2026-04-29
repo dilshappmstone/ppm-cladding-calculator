@@ -15,7 +15,7 @@ app = Flask(__name__)
 
 # ================= CONFIG =================
 app.config['SECRET_KEY'] = 'ppm_secret'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/data.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # ================= INIT =================
@@ -481,27 +481,23 @@ def register():
 
         return redirect("/login")
 
-return """
-<h2>Register</h2>
-<form method="post">
+    return """
+    <h2>Register</h2>
+    <form method="post">
 
-<input name="business" placeholder="Business Name"><br><br>
+    <input name="business" placeholder="Business Name"><br><br>
+    <input name="email" placeholder="Email"><br><br>
+    <input name="password" type="password" placeholder="Password"><br><br>
+    <input name="address" placeholder="Address"><br><br>
+    <input name="phone" placeholder="Telephone Number"><br><br>
 
-<input name="email" placeholder="Email"><br><br>
+    <label>
+    <input type="checkbox" required> Accept Terms and Conditions
+    </label><br><br>
 
-<input name="password" type="password" placeholder="Password"><br><br>
-
-<input name="address" placeholder="Address"><br><br>
-
-<input name="phone" placeholder="Telephone Number"><br><br>
-
-<label>
-<input type="checkbox" required> Accept Terms and Conditions
-</label><br><br>
-
-<button>Register</button>
-</form>
-"""
+    <button>Register</button>
+    </form>
+    """
 
 @app.route("/login", methods=["GET","POST"])
 def login():
