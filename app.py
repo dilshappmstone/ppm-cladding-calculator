@@ -98,84 +98,130 @@ HTML = """
 
 <style>
 body {
-    font-family: Arial;
-    background:#f4f6f8;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #eef2f7, #dfe9f3);
     margin:0;
 }
+
+/* MAIN CONTAINER */
 .container {
+    <img src="/static/logo.png" style="width:140px; margin-bottom:20px;">
     max-width:950px;
-    margin:30px auto;
+    margin:40px auto;
     background:white;
     padding:30px;
-    border-radius:10px;
-    box-shadow:0 6px 20px rgba(0,0,0,0.08);
+    border-radius:14px;
+    box-shadow:0 12px 30px rgba(0,0,0,0.12);
 }
+
+/* SECTION */
 .section { margin-bottom:25px; }
 
+/* LABEL */
 label {
     font-weight:600;
     display:block;
     margin-top:10px;
+    color:#333;
 }
 
+/* INPUTS */
 input, select, textarea {
     width:100%;
-    padding:10px;
-    border:1px solid #ccc;
-    border-radius:6px;
+    padding:12px;
+    border:1px solid #ddd;
+    border-radius:8px;
     margin-top:5px;
+    transition:0.2s;
 }
 
+input:focus, select:focus, textarea:focus {
+    border-color:#2d7ef7;
+    outline:none;
+    box-shadow:0 0 0 2px rgba(45,126,247,0.15);
+}
+
+/* BUTTONS */
 button {
     margin-top:15px;
-    padding:12px;
+    padding:14px;
     background:black;
     color:white;
     border:none;
-    border-radius:6px;
+    border-radius:8px;
     font-size:15px;
     cursor:pointer;
+    transition:0.2s;
 }
 
+button:hover {
+    background:#333;
+    transform:translateY(-1px);
+}
+
+/* ADD BUTTON */
 .add-btn {
     background:#2d7ef7;
 }
 
+.add-btn:hover {
+    background:#1b5fd1;
+}
+
+/* REMOVE BUTTON */
 .remove-btn {
     background:#d9534f;
     margin-top:10px;
 }
 
-.area-box {
-    border:1px solid #ddd;
-    padding:15px;
-    margin-top:15px;
-    border-radius:8px;
-    background:#fafafa;
+.remove-btn:hover {
+    background:#c9302c;
 }
 
+/* AREA BOX */
+.area-box {
+    border:1px solid #e5e5e5;
+    padding:18px;
+    margin-top:15px;
+    border-radius:10px;
+    background:#fafafa;
+    transition:0.2s;
+}
+
+.area-box:hover {
+    box-shadow:0 6px 15px rgba(0,0,0,0.08);
+}
+
+/* AREA HEADER */
 .area-title {
     display:flex;
     justify-content:space-between;
     align-items:center;
 }
 
+/* RESULT CARD */
 .result {
     margin-top:30px;
-    padding:20px;
+    padding:25px;
     background:#f9fafb;
-    border-radius:8px;
-    border:1px solid #ddd;  
+    border-radius:10px;
+    border-left:5px solid #2d7ef7;  
 }
 
+/* TOGGLE (INSTALL BUTTON STYLE) */
 .toggle {
     display:flex;
     align-items:center;
-    gap:10px;
+    gap:12px;
     background:#f1f1f1;
-    padding:10px;
-    border-radius:8px;
+    padding:12px;
+    border-radius:10px;
     cursor:pointer;
+    transition:0.2s;
+}
+
+.toggle:hover {
+    background:#e6e6e6;
 }
 
 .toggle input {
@@ -184,15 +230,18 @@ button {
 }
 
 .toggle input:checked + label {
-    color:green;
+    color:#2d7ef7;
     font-weight:bold;
 }
 
+/* NAVBAR */
 .navbar {
-    background:black;
-    padding:12px;
-    border-radius:8px;
-    margin-bottom:20px;
+    background: linear-gradient(90deg, #000, #333);
+    padding:14px;
+    border-radius:10px;
+    margin-bottom:25px;
+    display:flex;
+    justify-content:space-between;
 }
 
 .navbar a {
@@ -203,14 +252,28 @@ button {
 }
 
 .navbar a:hover {
-    text-decoration:underline;
+    color:#2d7ef7;
 }
+
+/* HEADINGS */
+h1 {
+    margin-bottom:5px;
+}
+
+h3 {
+    margin-top:25px;
+}
+
 h4 {
     margin-top:15px;
-    color:#333;
+    color:#444;
+}
+
+/* SMALL ANIMATION */
+* {
+    transition: all 0.15s ease-in-out;
 }
 </style>
-
 <script>
 let areaCount = 0;
 
@@ -357,7 +420,7 @@ window.onload = function() {
 </select>
 </div>
 
-<div class="toggle">
+<div class="toggle" onclick="document.getElementById('install').click()">
     <input type="checkbox" id="install" name="install">
     <label for="install">Include Installation</label>
 </div>
