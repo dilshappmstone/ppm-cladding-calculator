@@ -390,7 +390,7 @@ window.onload = function() {
 
 <div class="container">
 
-<img src="/static/ppm-logo.png" style="width:140px; margin-bottom:20px;">
+<img src="{{ url_for('static', filename='ppm-stone-logo.png') }}" style="width:140px; margin-bottom:20px;">
 
 <div class="navbar">
     <a href="/">Dashboard</a>
@@ -773,7 +773,7 @@ body {
 <body>
 
 <div class="header">
-    <img src="/static/logo.png">
+    <img src="{{ url_for('static', filename='ppm-stone-logo.png') }}" style="width:140px; margin-bottom:20px;">
     <div>
         <a href="/quote">New Quote</a>
         <a href="/history">History</a>
