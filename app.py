@@ -481,24 +481,7 @@ def register():
 
         return redirect("/login")
 
-    return """
-    <h2>Register</h2>
-    <form method="post">
-
-    <input name="business" placeholder="Business Name"><br><br>
-    <input name="email" placeholder="Email"><br><br>
-    <input name="password" type="password" placeholder="Password"><br><br>
-    <input name="address" placeholder="Address"><br><br>
-    <input name="phone" placeholder="Telephone Number"><br><br>
-
-    <label>
-    <input type="checkbox" required> Accept Terms & Conditions
-    </label><br><br>
-
-    <button>Register</button>
-    </form>
-    """
-    
+return """
 <h2>Register</h2>
 <form method="post">
 
@@ -513,13 +496,12 @@ def register():
 <input name="phone" placeholder="Telephone Number"><br><br>
 
 <label>
-<input type="checkbox" required> Accept Terms & Conditions
+<input type="checkbox" required> Accept Terms and Conditions
 </label><br><br>
 
 <button>Register</button>
 </form>
-    """
-
+"""
 
 @app.route("/login", methods=["GET","POST"])
 def login():
@@ -745,7 +727,7 @@ def history():
             <td>{q.project}</td>
             <td>{q.date.strftime('%d/%m/%Y')}</td>
             <td>${q.total}</td>
-            <td><a href="/quote/{q.id}">View</a></td>
+            <td>-</td>
         </tr>
         """
 
