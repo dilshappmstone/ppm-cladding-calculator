@@ -15,7 +15,15 @@ app = Flask(__name__)
 
 # ================= CONFIG =================
 app.config['SECRET_KEY'] = 'ppm_secret'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+import os
+
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL") or "sqlite:///data.db"
+
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "connect_args": {
+        "sslmode": "require"
+    }
+}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # ================= INIT =================
