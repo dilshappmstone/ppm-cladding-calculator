@@ -553,7 +553,12 @@ def register():
 
         return redirect("/login")
 
-    return """
+return """
+<!DOCTYPE html>
+<html>
+<head>
+<title>Register</title>
+
 <style>
 body {
     background:#111827;
@@ -562,19 +567,29 @@ body {
     justify-content:center;
     align-items:center;
     height:100vh;
+    margin:0;
 }
 
 .card {
     background:white;
     padding:30px;
     border-radius:12px;
-    width:350px;
+    width:360px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.3);
+    text-align:center;
+}
+
+.logo {
+    width:150px;
+    margin-bottom:20px;
 }
 
 input {
     width:100%;
-    padding:10px;
+    padding:12px;
     margin:10px 0;
+    border-radius:8px;
+    border:1px solid #ccc;
 }
 
 button {
@@ -584,22 +599,47 @@ button {
     color:white;
     border:none;
     border-radius:8px;
+    cursor:pointer;
+}
+
+button:hover {
+    background:#1e40af;
+}
+
+label {
+    font-size:14px;
 }
 </style>
+</head>
+
+<body>
 
 <div class="card">
+
+<img src="/static/ppm-stone-logo.png" class="logo">
+
 <h2>Register</h2>
 
 <form method="post">
+
 <input name="business" placeholder="Business Name">
 <input name="email" placeholder="Email">
 <input name="password" type="password" placeholder="Password">
 <input name="address" placeholder="Address">
-<input name="phone" placeholder="Phone">
+<input name="phone" placeholder="Telephone Number">
+
+<label>
+<input type="checkbox" required> Accept Terms & Conditions
+</label>
 
 <button>Register</button>
+
 </form>
+
 </div>
+
+</body>
+</html>
 """
 
 @app.route("/login", methods=["GET","POST"])
@@ -617,27 +657,42 @@ def login():
         return "Invalid login"
 
     return """
-    <style>
-    body {
+<!DOCTYPE html>
+<html>
+<head>
+<title>Login</title>
+
+<style>
+body {
     background:#111827;
     font-family:Segoe UI;
     display:flex;
     justify-content:center;
     align-items:center;
     height:100vh;
+    margin:0;
 }
 
 .card {
     background:white;
     padding:30px;
     border-radius:12px;
-    width:300px;
+    width:320px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.3);
+    text-align:center;
+}
+
+.logo {
+    width:150px;
+    margin-bottom:20px;
 }
 
 input {
     width:100%;
-    padding:10px;
+    padding:12px;
     margin:10px 0;
+    border-radius:8px;
+    border:1px solid #ccc;
 }
 
 button {
@@ -647,10 +702,28 @@ button {
     color:white;
     border:none;
     border-radius:8px;
+    cursor:pointer;
+}
+
+button:hover {
+    background:#1e40af;
+}
+
+a {
+    display:block;
+    margin-top:15px;
+    color:#2563eb;
+    text-decoration:none;
 }
 </style>
+</head>
+
+<body>
 
 <div class="card">
+
+<img src="/static/ppm-stone-logo.png" class="logo">
+
 <h2>Login</h2>
 
 <form method="post">
@@ -659,10 +732,13 @@ button {
 <button>Login</button>
 </form>
 
-<a href="/register">Register</a>
-</div>
-"""
+<a href="/register">Create account</a>
 
+</div>
+
+</body>
+</html>
+"""
 
 @app.route("/logout")
 @login_required
@@ -678,142 +754,142 @@ def logout():
 @login_required
 def home():
     return """
-<!DOCTYPE html>
-<html>
-<head>
-<title>PPM Dashboard</title>
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <title>PPM Dashboard</title>
 
-<style>
-body {
-    font-family: 'Segoe UI', Arial;
-    background: linear-gradient(135deg, #eef2f7, #dfe9f3);
-    margin:0;
-}
+    <style>
+    body {
+        margin:0;
+        font-family:'Segoe UI', Arial;
+        background:linear-gradient(135deg,#eef2f7,#dfe9f3);
+    }
 
-/* HEADER */
-.header {
-    background:black;
-    color:white;
-    padding:20px 30px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-}
+    .container {
+        max-width:1000px;
+        margin:40px auto;
+        background:white;
+        padding:40px;
+        border-radius:14px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.1);
+    }
 
-.header img {
-    width:120px;
-}
+    .logo {
+        width:160px;
+        margin-bottom:20px;
+    }
 
-.header a {
-    color:white;
-    margin-left:20px;
-    text-decoration:none;
-    font-weight:600;
-}
+    .navbar {
+        background:linear-gradient(90deg,#000,#333);
+        padding:15px;
+        border-radius:10px;
+        margin-bottom:30px;
+        display:flex;
+        gap:25px;
+    }
 
-/* DASHBOARD WRAPPER */
-.dashboard {
-    max-width:1100px;
-    margin:40px auto;
-    padding:20px;
-}
+    .navbar a {
+        color:white;
+        text-decoration:none;
+        font-weight:600;
+    }
 
-/* WELCOME CARD */
-.welcome {
-    background:white;
-    padding:25px;
-    border-radius:12px;
-    box-shadow:0 10px 25px rgba(0,0,0,0.08);
-    margin-bottom:25px;
-}
+    .navbar a:hover {
+        color:#2d7ef7;
+    }
 
-.welcome h2 {
-    margin:0;
-}
+    h1 {
+        margin-bottom:5px;
+    }
 
-/* CARDS GRID */
-.grid {
-    display:grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap:20px;
-}
+    .subtitle {
+        color:#666;
+        margin-bottom:25px;
+    }
 
-/* CARD */
-.card {
-    background:white;
-    padding:25px;
-    border-radius:12px;
-    box-shadow:0 8px 20px rgba(0,0,0,0.08);
-    transition:0.2s;
-    cursor:pointer;
-}
+    .card {
+        background:#f9fafb;
+        padding:25px;
+        border-radius:12px;
+        border-left:5px solid #2d7ef7;
+        margin-top:20px;
+    }
 
-.card:hover {
-    transform:translateY(-5px);
-    box-shadow:0 12px 30px rgba(0,0,0,0.12);
-}
+    .actions {
+        margin-top:30px;
+        display:flex;
+        gap:15px;
+    }
 
-.card h3 {
-    margin-top:0;
-}
+    .btn {
+        padding:12px 18px;
+        border-radius:8px;
+        text-decoration:none;
+        font-weight:600;
+    }
 
-/* BUTTON */
-.btn {
-    display:inline-block;
-    margin-top:10px;
-    padding:10px 15px;
-    background:#2d7ef7;
-    color:white;
-    border-radius:6px;
-    text-decoration:none;
-}
-</style>
-</head>
+    .btn-primary {
+        background:#2d7ef7;
+        color:white;
+    }
 
-<body>
+    .btn-primary:hover {
+        background:#1b5fd1;
+    }
 
-<div class="header">
-    <img src="{{ url_for('static', filename='ppm-stone-logo.png') }}" style="width:140px; margin-bottom:20px;">
-    <div>
-        <a href="/quote">New Quote</a>
-        <a href="/history">History</a>
-        <a href="/logout">Logout</a>
-    </div>
-</div>
+    .btn-dark {
+        background:#111;
+        color:white;
+    }
 
-<div class="dashboard">
+    .btn-dark:hover {
+        background:#333;
+    }
+    </style>
+    </head>
 
-    <div class="welcome">
-        <h2>Welcome back 👋</h2>
-        <p>Manage your quotes, projects and calculations easily.</p>
-    </div>
+    <body>
 
-    <div class="grid">
+    <div class="container">
 
-        <div class="card" onclick="location.href='/quote'">
-            <h3>🧮 New Quote</h3>
-            <p>Create a new cladding calculation and generate quote.</p>
-            <a href="/quote" class="btn">Start</a>
+        <img src="/static/ppm-stone-logo.png" class="logo">
+
+        <div class="navbar">
+            <a href="/">Dashboard</a>
+            <a href="/quote">New Quote</a>
+            <a href="/history">History</a>
+            <a href="/logout">Logout</a>
         </div>
 
-        <div class="card" onclick="location.href='/history'">
-            <h3>📄 Quote History</h3>
-            <p>View all previously generated quotes.</p>
-            <a href="/history" class="btn">View</a>
-        </div>
+        <h1>Welcome to PPM Stone</h1>
+        <p class="subtitle"><b>Quote System</b></p>
 
         <div class="card">
-            <h3>📊 Summary</h3>
-            <p>Track usage and project activity (coming soon).</p>
+            <h3>About This System</h3>
+            <p>
+            The PPM Cladding Calculator is a professional quoting tool designed to help you 
+            accurately estimate material quantities, calculate installation costs, and generate 
+            detailed quotes for your projects.
+            </p>
+
+            <p>
+            Whether you're working on residential, commercial, or large-scale developments, 
+            this system ensures fast, consistent, and reliable pricing — reducing errors 
+            and saving time.
+            </p>
+        </div>
+
+        <div class="actions">
+            <a href="/quote" class="btn btn-primary">+ Create New Quote</a>
+            <a href="/history" class="btn btn-dark">View Quote History</a>
         </div>
 
     </div>
 
-</div>
-
-</body>
-</html>
-"""
+    </body>
+    </html>
+    """
 
 
 # =========================
