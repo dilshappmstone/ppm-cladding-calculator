@@ -553,7 +553,8 @@ def register():
 
         return redirect("/login")
 
-return """
+    # ✅ THIS MUST BE INSIDE FUNCTION
+    return """
 <!DOCTYPE html>
 <html>
 <head>
