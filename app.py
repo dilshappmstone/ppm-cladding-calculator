@@ -390,7 +390,7 @@ window.onload = function() {
 
 <div class="container">
 
-<img src="/static/logo.png" style="width:140px; margin-bottom:20px;">
+<img src="/static/ppm-logo.png" style="width:140px; margin-bottom:20px;">
 
 <div class="navbar">
     <a href="/">Dashboard</a>
