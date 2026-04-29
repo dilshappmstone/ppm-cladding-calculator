@@ -578,10 +578,14 @@ def quote():
 
         p = PRODUCTS.get(request.form.get("product"))
 
+        # ✅ FIX 1: GENERATE QUOTE NUMBER FIRST
+        now = datetime.now()
+        count = Quote.query.count() + 1
+        quote_number = f"{now.strftime('%y%m%d')}{str(count).zfill(3)}"
+
         total_area = 0
         total_corner_lm = 0
 
-        # ================= MULTI AREA =================
         i = 1
         found_multi = False
         area_list = []
@@ -625,9 +629,10 @@ def quote():
                 r = value / 2 if mode == "diameter" else value
                 arc = math.pi * r if curve_type == "half" else (math.pi * r)/2
 
+                # ✅ FIX 2: ACTUAL AREA CALC
                 area = arc * curve_height
 
-                # 👉 OPTIONAL: treat arc as corner LM (more realistic)
+                # optional but better accuracy
                 corner = arc
 
             else:
@@ -636,7 +641,7 @@ def quote():
             total_area += area
             total_corner_lm += corner
 
-            # ✅ STORE EVERYTHING
+            # ✅ FIX 3: STORE curve_height
             area_list.append({
                 "type": typ,
                 "length": length,
@@ -651,7 +656,6 @@ def quote():
             })
 
             i += 1
-
 
         # ================= CALCULATION =================
         corner_area = total_corner_lm*(2*CORNER_RETURN)
@@ -672,61 +676,56 @@ def quote():
         gst = subtotal*GST_RATE
         total = subtotal+gst
 
-# ================= GENERATE QUOTE NUMBER =================
-now = datetime.now()
-count = Quote.query.count() + 1
-quote_number = f"{now.strftime('%y%m%d')}{str(count).zfill(3)}"
+        # ================= RESULT =================
+        result = {
+            "product_name": p["name"],
+            "size": p["size"],
+            "body_code": p["body_code"],
+            "corner_code": p["corner_code"],
+            "areas": area_list,
 
-# ================= RESULT =================
-result = {
-    "product_name": p["name"],
-    "size": p["size"],
-    "body_code": p["body_code"],
-    "corner_code": p["corner_code"],
-    "areas": area_list,
+            "area_waste": round(area_waste, 2),
+            "corner_pcs": corner_pcs,
+            "corner_lm": round(total_corner_lm, 2),  # ✅ FIX 4
 
-    "area_waste": round(area_waste, 2),
-    "corner_pcs": corner_pcs,
+            "body_rate": p["body_price"],
+            "corner_rate": p["corner_price"],
 
-    "body_rate": p["body_price"],
-    "corner_rate": p["corner_price"],
+            "body_total": round(body_total, 2),
+            "corner_total": round(corner_total, 2),
 
-    "body_total": round(body_total, 2),
-    "corner_total": round(corner_total, 2),
+            "install": request.form.get("install"),
+            "install_body": round(install_body, 2),
+            "install_corner": round(install_corner, 2),
 
-    "install": request.form.get("install"),
-    "install_body": round(install_body, 2),
-    "install_corner": round(install_corner, 2),
+            "subtotal": round(subtotal, 2),
+            "gst": round(gst, 2),
+            "total": round(total, 2),
 
-    "subtotal": round(subtotal, 2),
-    "gst": round(gst, 2),
-    "total": round(total, 2),
+            "customer": request.form.get("customer") or "",
+            "project": request.form.get("project") or "",
+            "address": request.form.get("address") or "",
 
-    "customer": request.form.get("customer") or "",
-    "project": request.form.get("project") or "",
-    "address": request.form.get("address") or "",
+            "quote_number": quote_number,
 
-    "quote_number": quote_number,
-
-    "total_area": round(total_area, 2),
-    "corner_area": round(corner_area, 2),
-    "net_area": round(net_area, 2),
-}
+            "total_area": round(total_area, 2),
+            "corner_area": round(corner_area, 2),
+            "net_area": round(net_area, 2),
+        }
 
         # ================= SAVE =================
-db.session.add(Quote(
-    user_id=current_user.id,
-    quote_number=quote_number,   # ✅ MUST BE HERE
-    customer=result["customer"],
-    project=result["project"],
-    total=result["total"]
-))
+        db.session.add(Quote(
+            user_id=current_user.id,
+            quote_number=quote_number,
+            customer=result["customer"],
+            project=result["project"],
+            total=result["total"]
+        ))
         db.session.commit()
 
         return render_template_string(HTML, result=result, products=PRODUCTS)
 
     return render_template_string(HTML, result=None, products=PRODUCTS)
-
 
 # =========================
 # HISTORY (DASHBOARD)
