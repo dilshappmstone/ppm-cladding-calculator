@@ -105,7 +105,6 @@ body {
 
 /* MAIN CONTAINER */
 .container {
-    <img src="/static/logo.png" style="width:140px; margin-bottom:20px;">
     max-width:950px;
     margin:40px auto;
     background:white;
@@ -391,6 +390,8 @@ window.onload = function() {
 
 <div class="container">
 
+<img src="/static/logo.png" style="width:140px; margin-bottom:20px;">
+
 <div class="navbar">
     <a href="/">Dashboard</a>
     <a href="/quote">New Quote</a>
@@ -553,22 +554,53 @@ def register():
         return redirect("/login")
 
     return """
-    <h2>Register</h2>
-    <form method="post">
+<style>
+body {
+    background:#111827;
+    font-family:Segoe UI;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
 
-    <input name="business" placeholder="Business Name"><br><br>
-    <input name="email" placeholder="Email"><br><br>
-    <input name="password" type="password" placeholder="Password"><br><br>
-    <input name="address" placeholder="Address"><br><br>
-    <input name="phone" placeholder="Telephone Number"><br><br>
+.card {
+    background:white;
+    padding:30px;
+    border-radius:12px;
+    width:350px;
+}
 
-    <label>
-    <input type="checkbox" required> Accept Terms and Conditions
-    </label><br><br>
+input {
+    width:100%;
+    padding:10px;
+    margin:10px 0;
+}
 
-    <button>Register</button>
-    </form>
-    """
+button {
+    width:100%;
+    padding:12px;
+    background:#2563eb;
+    color:white;
+    border:none;
+    border-radius:8px;
+}
+</style>
+
+<div class="card">
+<h2>Register</h2>
+
+<form method="post">
+<input name="business" placeholder="Business Name">
+<input name="email" placeholder="Email">
+<input name="password" type="password" placeholder="Password">
+<input name="address" placeholder="Address">
+<input name="phone" placeholder="Phone">
+
+<button>Register</button>
+</form>
+</div>
+"""
 
 @app.route("/login", methods=["GET","POST"])
 def login():
@@ -585,14 +617,51 @@ def login():
         return "Invalid login"
 
     return """
-    <h2>Login</h2>
-    <form method="post">
-    <input name="email"><br><br>
-    <input name="password" type="password"><br><br>
-    <button>Login</button>
-    </form>
-    <a href="/register">Register</a>
-    """
+    <style>
+    body {
+    background:#111827;
+    font-family:Segoe UI;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.card {
+    background:white;
+    padding:30px;
+    border-radius:12px;
+    width:300px;
+}
+
+input {
+    width:100%;
+    padding:10px;
+    margin:10px 0;
+}
+
+button {
+    width:100%;
+    padding:12px;
+    background:#2563eb;
+    color:white;
+    border:none;
+    border-radius:8px;
+}
+</style>
+
+<div class="card">
+<h2>Login</h2>
+
+<form method="post">
+<input name="email" placeholder="Email">
+<input name="password" type="password" placeholder="Password">
+<button>Login</button>
+</form>
+
+<a href="/register">Register</a>
+</div>
+"""
 
 
 @app.route("/logout")
@@ -609,11 +678,142 @@ def logout():
 @login_required
 def home():
     return """
-    <h2>PPM Dashboard</h2>
-    <p>Welcome! Use navigation:</p>
-    <a href="/quote">Go to Calculator</a><br><br>
-    <a href="/history">View Quote History</a>
-    """
+<!DOCTYPE html>
+<html>
+<head>
+<title>PPM Dashboard</title>
+
+<style>
+body {
+    font-family: 'Segoe UI', Arial;
+    background: linear-gradient(135deg, #eef2f7, #dfe9f3);
+    margin:0;
+}
+
+/* HEADER */
+.header {
+    background:black;
+    color:white;
+    padding:20px 30px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.header img {
+    width:120px;
+}
+
+.header a {
+    color:white;
+    margin-left:20px;
+    text-decoration:none;
+    font-weight:600;
+}
+
+/* DASHBOARD WRAPPER */
+.dashboard {
+    max-width:1100px;
+    margin:40px auto;
+    padding:20px;
+}
+
+/* WELCOME CARD */
+.welcome {
+    background:white;
+    padding:25px;
+    border-radius:12px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.08);
+    margin-bottom:25px;
+}
+
+.welcome h2 {
+    margin:0;
+}
+
+/* CARDS GRID */
+.grid {
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap:20px;
+}
+
+/* CARD */
+.card {
+    background:white;
+    padding:25px;
+    border-radius:12px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.08);
+    transition:0.2s;
+    cursor:pointer;
+}
+
+.card:hover {
+    transform:translateY(-5px);
+    box-shadow:0 12px 30px rgba(0,0,0,0.12);
+}
+
+.card h3 {
+    margin-top:0;
+}
+
+/* BUTTON */
+.btn {
+    display:inline-block;
+    margin-top:10px;
+    padding:10px 15px;
+    background:#2d7ef7;
+    color:white;
+    border-radius:6px;
+    text-decoration:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <img src="/static/logo.png">
+    <div>
+        <a href="/quote">New Quote</a>
+        <a href="/history">History</a>
+        <a href="/logout">Logout</a>
+    </div>
+</div>
+
+<div class="dashboard">
+
+    <div class="welcome">
+        <h2>Welcome back 👋</h2>
+        <p>Manage your quotes, projects and calculations easily.</p>
+    </div>
+
+    <div class="grid">
+
+        <div class="card" onclick="location.href='/quote'">
+            <h3>🧮 New Quote</h3>
+            <p>Create a new cladding calculation and generate quote.</p>
+            <a href="/quote" class="btn">Start</a>
+        </div>
+
+        <div class="card" onclick="location.href='/history'">
+            <h3>📄 Quote History</h3>
+            <p>View all previously generated quotes.</p>
+            <a href="/history" class="btn">View</a>
+        </div>
+
+        <div class="card">
+            <h3>📊 Summary</h3>
+            <p>Track usage and project activity (coming soon).</p>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
+"""
 
 
 # =========================
@@ -799,22 +999,65 @@ def history():
         """
 
     return f"""
-    <h2>Quote History</h2>
+    <html>
+<head>
+<style>
+body {{
+    font-family:Segoe UI;
+    background:#f4f6f9;
+    padding:30px;
+}}
 
-    <table border="1" cellpadding="10">
-        <tr>
-            <th>Quote No</th>
-            <th>Customer</th>
-            <th>Project</th>
-            <th>Date</th>
-            <th>Total</th>
-            <th>Action</th>
-        </tr>
-        {rows}
-    </table>
+.card {{
+    background:white;
+    padding:25px;
+    border-radius:12px;
+    box-shadow:0 6px 20px rgba(0,0,0,0.08);
+}}
 
-    <br><a href="/quote">Back</a>
-    """
+table {{
+    width:100%;
+    border-collapse:collapse;
+}}
+
+th {{
+    background:#111827;
+    color:white;
+}}
+
+th, td {{
+    padding:12px;
+}}
+
+tr:nth-child(even) {{
+    background:#f3f4f6;
+}}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+<h2>Quote History</h2>
+
+<table>
+<tr>
+<th>Quote No</th>
+<th>Customer</th>
+<th>Project</th>
+<th>Date</th>
+<th>Total</th>
+</tr>
+
+{rows}
+
+</table>
+
+</div>
+
+</body>
+</html>
+"""
 # =========================
 # PDF
 # =========================
