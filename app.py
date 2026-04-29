@@ -1071,89 +1071,92 @@ def history():
             <td>{q.project}</td>
             <td>{q.date.strftime('%d/%m/%Y')}</td>
             <td>${q.total}</td>
-            <td>-</td>
         </tr>
         """
 
     return f"""
     <html>
-<head>
-<style>
-body {{
-    font-family:Segoe UI;
-    background:#f4f6f9;
-    padding:30px;
-}}
+    <head>
+    <style>
+    body {{
+        font-family:Segoe UI;
+        background:#f4f6f9;
+        padding:30px;
+    }}
 
-.card {{
-    background:white;
-    padding:25px;
-    border-radius:12px;
-    box-shadow:0 6px 20px rgba(0,0,0,0.08);
-}}
+    .card {{
+        background:white;
+        padding:25px;
+        border-radius:12px;
+        box-shadow:0 6px 20px rgba(0,0,0,0.08);
+    }}
 
-table {{
-    width:100%;
-    border-collapse:collapse;
-}}
+    table {{
+        width:100%;
+        border-collapse:collapse;
+    }}
 
-th {{
-    background:#111827;
-    color:white;
-}}
+    th {{
+        background:#111827;
+        color:white;
+    }}
 
-th, td {{
-    padding:12px;
-}}
+    th, td {{
+        padding:12px;
+    }}
 
-tr:nth-child(even) {{
-    background:#f3f4f6;
-}}
-.top-bar {
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:20px;
-}
+    tr:nth-child(even) {{
+        background:#f3f4f6;
+    }}
 
-.btn-back {
-    padding:10px 16px;
-    background:#111;
-    color:white;
-    border-radius:8px;
-    text-decoration:none;
-    font-weight:600;
-}
+    .btn {{
+        padding:12px 18px;
+        border-radius:8px;
+        text-decoration:none;
+        font-weight:600;
+        margin-right:10px;
+    }}
 
-.btn-back:hover {
-    background:#333;
-}
-</style>
-</head>
+    .btn-dark {{
+        background:#111;
+        color:white;
+    }}
 
-<body>
+    .btn-primary {{
+        background:#2d7ef7;
+        color:white;
+    }}
+    </style>
+    </head>
 
-<div class="card">
-<h2>Quote History</h2>
-<a href="/" class="btn-back">← Dashboard</a>
-<table>
-<tr>
-<th>Quote No</th>
-<th>Customer</th>
-<th>Project</th>
-<th>Date</th>
-<th>Total</th>
-</tr>
+    <body>
 
-{rows}
+    <div class="card">
+    <h2>Quote History</h2>
 
-</table>
+    <table>
+    <tr>
+        <th>Quote No</th>
+        <th>Customer</th>
+        <th>Project</th>
+        <th>Date</th>
+        <th>Total</th>
+    </tr>
 
-</div>
+    {rows}
 
-</body>
-</html>
-"""
+    </table>
+
+    <div style="margin-top:25px;">
+        <a href="/" class="btn btn-dark">← Dashboard</a>
+        <a href="/quote" class="btn btn-primary">+ New Quote</a>
+    </div>
+
+    </div>
+
+    </body>
+    </html>
+    """
 # =========================
 # PDF
 # =========================
