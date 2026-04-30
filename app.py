@@ -2,6 +2,7 @@ from flask import Flask, request, render_template_string, send_file, redirect
 import math, io, os
 from datetime import datetime
 import ast
+import json
 from reportlab.platypus import PageBreak
 
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
@@ -1256,7 +1257,7 @@ def pdf():
     story.append(Paragraph("Notes:", styles['Heading3']))
     story.append(Paragraph("This is an estimate of cost, the final figures may vary after the final site inspection.", styles['Normal']))
 
-       story.append(Spacer(1,10))
+    story.append(Spacer(1,10))
     story.append(Paragraph("Disclaimer:", styles['Heading3']))
     story.append(Paragraph(
         "Please note that our bluestones and stone claddings are natural, so variations in colour, texture, and veining may occur. "
