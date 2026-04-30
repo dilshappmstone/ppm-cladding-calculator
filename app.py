@@ -1,6 +1,8 @@
 from flask import Flask, request, render_template_string, send_file, redirect
 import math, io, os
 from datetime import datetime
+import ast
+from reportlab.platypus import PageBreak
 
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib import colors
@@ -523,6 +525,7 @@ Corner: {{result.corner_pcs}} pcs × ${{result.corner_rate}}
 {% for k,v in result.items() %}
 <input type="hidden" name="{{k}}" value="{{v}}">
 {% endfor %}
+<input type="hidden" name="areas_json" value='{{ result.areas | tojson }}'>
 <button>Download PDF</button>
 </form>
 
@@ -1245,7 +1248,7 @@ def pdf():
         ('FONTNAME',(0,2),(-1,2),'Helvetica-Bold'),
         ('BACKGROUND',(0,2),(-1,2),colors.lightgrey)
     ]))
-
+    
     story.append(Spacer(1,15))
     story.append(t2)
 
@@ -1260,7 +1263,58 @@ def pdf():
         "These differences from samples or images are natural and enhance the stone's unique character.",
         styles['Normal']
     ))
+    # ================= PAGE BREAK =================
+story.append(PageBreak())
 
+# ================= AREA DETAILS =================
+story.append(Paragraph("<b>AREA DETAILS & CALCULATIONS</b>", styles['Title']))
+story.append(Spacer(1,12))
+
+# Get areas safely
+areas = ast.literal_eval(request.form.get("areas_json", "[]"))
+
+for a in areas:
+    story.append(Paragraph(f"<b>{a.get('area_name','Area')}</b>", styles['Heading3']))
+
+    story.append(Paragraph(f"Type: {a.get('type')}", styles['Normal']))
+
+    if a.get("type") in ["wall","floor"]:
+        story.append(Paragraph(f"Length: {a.get('length')} m", styles['Normal']))
+        story.append(Paragraph(f"Height: {a.get('height')} m", styles['Normal']))
+        story.append(Paragraph(f"Corner: {a.get('corner')} LM", styles['Normal']))
+
+    if a.get("type") == "pillar":
+        story.append(Paragraph(f"Pillar Height: {a.get('pillar_height')} m", styles['Normal']))
+        story.append(Paragraph(f"Front: {a.get('front')} m", styles['Normal']))
+        story.append(Paragraph(f"Depth: {a.get('depth')} m", styles['Normal']))
+
+    if a.get("type") == "curve":
+        story.append(Paragraph(f"Curve Height: {a.get('curve_height')} m", styles['Normal']))
+
+    story.append(Paragraph(f"Calculated Area: {a.get('area')} m²", styles['Normal']))
+    story.append(Spacer(1,10))
+
+
+# ================= CALCULATION SUMMARY =================
+story.append(Spacer(1,10))
+story.append(Paragraph("<b>CALCULATION SUMMARY</b>", styles['Heading2']))
+story.append(Spacer(1,10))
+
+story.append(Paragraph(f"Total Area: {request.form.get('total_area')} m²", styles['Normal']))
+story.append(Paragraph(f"Corner Deduction: {request.form.get('corner_area')} m²", styles['Normal']))
+story.append(Paragraph(f"Net Area: {request.form.get('net_area')} m²", styles['Normal']))
+story.append(Paragraph(f"Area with Wastage (10%): {request.form.get('area_waste')} m²", styles['Normal']))
+
+story.append(Spacer(1,20))
+
+# ================= DISCLAIMER =================
+story.append(Paragraph("<b>DISCLAIMER</b>", styles['Heading3']))
+story.append(Paragraph(
+    "This calculation is provided as an estimate only. "
+    "All measurements and quantities should be verified before installation. "
+    "PPM Stone is not responsible for any discrepancies or errors.",
+    styles['Normal']
+))
     doc.build(story)
     buffer.seek(0)
 
