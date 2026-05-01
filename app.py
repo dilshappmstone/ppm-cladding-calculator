@@ -100,7 +100,6 @@ HTML = """
 <head>
 <title>PPM Cladding Calculator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAcRLQSvdZs_2zaIq0tspD54WBSvNsPKY4&libraries=places"></script>
 <style>
 body {
     font-family: 'Segoe UI', Arial, sans-serif;
@@ -388,31 +387,6 @@ window.onload = function() {
     addArea();
 };
 
-function initAutocomplete() {
-    const input = document.getElementById("address");
-
-    if (!input || typeof google === "undefined") {
-        console.log("Google not loaded yet");
-        return;
-    }
-
-    const autocomplete = new google.maps.places.Autocomplete(input, {
-        types: ["geocode"],
-        componentRestrictions: { country: "au" }
-    });
-
-    autocomplete.addListener("place_changed", function () {
-        const place = autocomplete.getPlace();
-
-        if (place && place.formatted_address) {
-            input.value = place.formatted_address;
-        }
-    });
-}
-
-window.onload = function () {
-    setTimeout(initAutocomplete, 500); // ensures Google loads first
-};
 </script>
 
 </head>
@@ -465,7 +439,7 @@ window.onload = function () {
 <input name="project">
 
 <label>Address</label>
-<input id="address" name="address" placeholder="Start typing address..." autocomplete="off">
+<textarea name="address" placeholder="Enter site address"></textarea>
 </div>
 
 <button>Generate Quote</button>
