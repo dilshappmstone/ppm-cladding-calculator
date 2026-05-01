@@ -58,7 +58,9 @@ class Quote(db.Model):
     project = db.Column(db.String(100))
     total = db.Column(db.Float)
     date = db.Column(db.DateTime, default=datetime.utcnow)
-
+    areas_json = db.Column(db.Text)
+    result_json = db.Column(db.Text)
+    
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -720,6 +722,76 @@ a {
     color:#2563eb;
     text-decoration:none;
 }
+table {
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+}
+
+th {
+    background:#0f1c2e;
+    color:white;
+    padding:12px;
+    text-align:left;
+    font-size:14px;
+}
+
+td {
+    padding:12px;
+    border-bottom:1px solid #eee;
+    font-size:14px;
+}
+
+tr:nth-child(even) {
+    background:#f7f9fc;
+}
+
+tr:hover {
+    background:#eef3ff;
+}
+
+/* ALIGNMENT FIX */
+td:nth-child(5),
+th:nth-child(5) {
+    text-align:right;
+}
+
+/* ACTION BUTTON */
+.view-btn {
+    background:#2d7ef7;
+    border:none;
+    color:white;
+    padding:6px 10px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:13px;
+}
+
+.view-btn:hover {
+    background:#1b5fd1;
+}
+@media (max-width:768px){
+    table {
+        display:block;
+        overflow-x:auto;
+        white-space:nowrap;
+    }
+}
+.btn-dark {
+    background:black;
+    color:white;
+    padding:10px 16px;
+    border-radius:8px;
+    text-decoration:none;
+}
+
+.btn-primary {
+    background:#2d7ef7;
+    color:white;
+    padding:10px 16px;
+    border-radius:8px;
+    text-decoration:none;
+}
 </style>
 </head>
 
@@ -1049,7 +1121,9 @@ def quote():
             quote_number=quote_number,
             customer=result["customer"],
             project=result["project"],
-            total=result["total"]
+            total=result["total"],
+            areas_json=json.dumps(area_list),
+            result_json=json.dumps(result)
         ))
         db.session.commit()
 
@@ -1068,16 +1142,22 @@ def history():
 
     rows = ""
     for q in quotes:
-        rows += f"""
-        <tr>
-            <td>{q.quote_number}</td>
-            <td>{q.customer}</td>
-            <td>{q.project}</td>
-            <td>{q.date.strftime('%d/%m/%Y')}</td>
-            <td>${q.total}</td>
-        </tr>
-        """
-
+    rows += f"""
+    <tr>
+        <td>{q.quote_number or '-'}</td>
+        <td>{q.customer or '-'}</td>
+        <td>{q.project or '-'}</td>
+        <td>{q.date.strftime('%d/%m/%Y')}</td>
+        <td>${q.total}</td>
+        <td>
+            <a href="/quote/view/{q.id}" class="view-btn">View</a>
+            <form method="post" action="/pdf" target="_blank" style="display:inline;">
+                <input type="hidden" name="result_json" value='{q.result_json}'>
+                <button class="view-btn" style="background:#28a745;">PDF</button>
+            </form>
+        </td>
+    </tr>
+    """
     return f"""
     <html>
     <head>
@@ -1151,9 +1231,9 @@ def history():
 
     </table>
 
-    <div style="margin-top:25px;">
-        <a href="/" class="btn btn-dark">← Dashboard</a>
-        <a href="/quote" class="btn btn-primary">+ New Quote</a>
+    <div style="margin-top:20px; display:flex; gap:10px;">
+        <a href="/" class="btn-dark">← Dashboard</a>
+        <a href="/quote" class="btn-primary">+ New Quote</a>
     </div>
 
     </div>
@@ -1162,10 +1242,52 @@ def history():
     </html>
     """
 # =========================
+# Load Full Quote
+# =========================
+@app.route("/quote/view/<int:id>")
+@login_required
+def view_quote(id):
+
+    q = Quote.query.get_or_404(id)
+
+    import json
+
+    areas = json.loads(q.areas_json) if q.areas_json else []
+    result = json.loads(q.result_json) if q.result_json else {}
+
+    return render_template_string(HTML, result=result, products=PRODUCTS)
+
+@app.route("/pdf/<int:id>")
+@login_required
+def pdf_from_history(id):
+
+    q = Quote.query.get_or_404(id)
+
+    import json
+    result = json.loads(q.result_json)
+
+    # reuse your existing PDF logic
+    # BUT replace request.form.get(...) with result["..."]
+
+    return your_pdf_function(result)
+    
+# =========================
 # PDF
 # =========================
+import json
+
 @app.route("/pdf", methods=["POST"])
 def pdf():
+
+    result = {}
+
+    # ✅ Load result_json if exists (history mode)
+    if request.form.get("result_json"):
+        result = json.loads(request.form.get("result_json"))
+
+    # ✅ Safe getter (supports both modes)
+    def get_val(key):
+        return result.get(key) if result else request.form.get(key)
 
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer)
@@ -1174,6 +1296,7 @@ def pdf():
 
     story = []
 
+    # ================= HEADER =================
     try:
         story.append(Image("static/ppm-stone-logo.png", width=140, height=60))
     except:
@@ -1181,50 +1304,64 @@ def pdf():
 
     story.append(Paragraph("<b>PPM Stone</b>", styles['Title']))
     story.append(Paragraph("PPM Enterprises Pty Ltd", styles['Normal']))
-    story.append(Paragraph("Factory 2, 64-70 Edison Road Dandenong South VIC 3175", styles['Normal']))
-    story.append(Paragraph("Tel: 1300 278 355", styles['Normal']))
-    story.append(Paragraph("Email: admin@ppmstone.com.au", styles['Normal']))
-    story.append(Paragraph("ABN: 79 116 045 553", styles['Normal']))
+    story.append(Paragraph("Factory 2, Dandenong South VIC 3175", styles['Normal']))
 
     story.append(Spacer(1,10))
     story.append(Paragraph("<b>QUOTE</b>", center))
 
     now = datetime.now()
-    story.append(Paragraph(f"Quote No: {request.form.get('quote_number')}", styles['Normal']))
+
+    story.append(Paragraph(f"Quote No: {get_val('quote_number')}", styles['Normal']))
     story.append(Paragraph(now.strftime("Date: %d/%m/%Y"), styles['Normal']))
 
+    # ================= CUSTOMER =================
     story.append(Spacer(1,10))
-
     story.append(Paragraph("<b>Customer Details</b>", styles['Heading3']))
-    story.append(Paragraph(f"Customer Name: {request.form.get('customer')}", styles['Normal']))
-    story.append(Paragraph(f"Project Reference: {request.form.get('project')}", styles['Normal']))
-    story.append(Paragraph(f"Site Address: {request.form.get('address')}", styles['Normal']))
+    story.append(Paragraph(f"Customer Name: {get_val('customer')}", styles['Normal']))
+    story.append(Paragraph(f"Project: {get_val('project')}", styles['Normal']))
+    story.append(Paragraph(f"Address: {get_val('address')}", styles['Normal']))
 
+    # ================= COST TABLE =================
     story.append(Spacer(1,15))
 
     data = [
         ["Code","Description","Qty","Unit","Rate","Amount"],
-        [request.form.get("body_code"),
-         f"PPM Cladding | Body | {request.form.get('product_name')} | {request.form.get('size')}",
-         request.form.get("area_waste"),"m²",
-         "$"+money(request.form.get("body_rate")),
-         "$"+money(request.form.get("body_total"))],
-
-        [request.form.get("corner_code"),
-         f"PPM Cladding | Corner | {request.form.get('product_name')} | {request.form.get('size')}",
-         request.form.get("corner_pcs"),"pcs",
-         "$"+money(request.form.get("corner_rate")),
-         "$"+money(request.form.get("corner_total"))]
+        [
+            get_val("body_code"),
+            f"PPM Cladding | Body | {get_val('product_name')} | {get_val('size')}",
+            get_val("area_waste"),
+            "m²",
+            "$"+money(get_val("body_rate")),
+            "$"+money(get_val("body_total"))
+        ],
+        [
+            get_val("corner_code"),
+            f"PPM Cladding | Corner | {get_val('product_name')} | {get_val('size')}",
+            get_val("corner_pcs"),
+            "pcs",
+            "$"+money(get_val("corner_rate")),
+            "$"+money(get_val("corner_total"))
+        ]
     ]
 
-    if request.form.get("install") == "on":
-        data.append([request.form.get("body_code")+"-I","Installation Body",
-                     request.form.get("area_waste"),"m²","$120",
-                     "$"+money(request.form.get("install_body"))])
+    if get_val("install") == "on":
+        data.append([
+            get_val("body_code")+"-I",
+            "Installation Body",
+            get_val("area_waste"),
+            "m²",
+            "$120",
+            "$"+money(get_val("install_body"))
+        ])
 
-        data.append([request.form.get("corner_code")+"-I","Installation Corner",
-                     request.form.get("corner_lm"),"LM","$120",
-                     "$"+money(request.form.get("install_corner"))])
+        data.append([
+            get_val("corner_code")+"-I",
+            "Installation Corner",
+            get_val("corner_lm"),
+            "LM",
+            "$120",
+            "$"+money(get_val("install_corner"))
+        ])
 
     table = Table(data)
     table.setStyle(TableStyle([
@@ -1236,10 +1373,11 @@ def pdf():
 
     story.append(table)
 
+    # ================= TOTALS =================
     totals = [
-        ["Subtotal (Ex GST)", "$"+money(request.form.get("subtotal"))],
-        ["GST (10%)", "$"+money(request.form.get("gst"))],
-        ["TOTAL (INC GST)", "$"+money(request.form.get("total"))]
+        ["Subtotal (Ex GST)", "$"+money(get_val("subtotal"))],
+        ["GST (10%)", "$"+money(get_val("gst"))],
+        ["TOTAL (INC GST)", "$"+money(get_val("total"))]
     ]
 
     t2 = Table(totals, colWidths=[300,120])
@@ -1249,33 +1387,23 @@ def pdf():
         ('FONTNAME',(0,2),(-1,2),'Helvetica-Bold'),
         ('BACKGROUND',(0,2),(-1,2),colors.lightgrey)
     ]))
-    
+
     story.append(Spacer(1,15))
     story.append(t2)
 
-    story.append(Spacer(1,20))
-    story.append(Paragraph("Notes:", styles['Heading3']))
-    story.append(Paragraph("This is an estimate of cost, the final figures may vary after the final site inspection.", styles['Normal']))
-
-    story.append(Spacer(1,10))
-    story.append(Paragraph("Disclaimer:", styles['Heading3']))
-    story.append(Paragraph(
-        "Please note that our bluestones and stone claddings are natural, so variations in colour, texture, and veining may occur. "
-        "These differences from samples or images are natural and enhance the stone's unique character.",
-        styles['Normal']
-    ))
-
     # ================= PAGE BREAK =================
     from reportlab.platypus import PageBreak
-    import json
-
     story.append(PageBreak())
 
     # ================= AREA DETAILS =================
     story.append(Paragraph("<b>AREA DETAILS & CALCULATIONS</b>", styles['Title']))
     story.append(Spacer(1,12))
 
-    areas = json.loads(request.form.get("areas_json", "[]"))
+    # ✅ Load areas correctly
+    if result.get("areas"):
+        areas = result.get("areas")
+    else:
+        areas = json.loads(request.form.get("areas_json", "[]"))
 
     for a in areas:
         story.append(Paragraph(f"<b>{a.get('area_name','Area')}</b>", styles['Heading3']))
@@ -1297,27 +1425,15 @@ def pdf():
         story.append(Paragraph(f"Calculated Area: {a.get('area')} m²", styles['Normal']))
         story.append(Spacer(1,10))
 
-    # ================= CALCULATION SUMMARY =================
-    story.append(Spacer(1,10))
-    story.append(Paragraph("<b>CALCULATION SUMMARY</b>", styles['Heading2']))
-    story.append(Spacer(1,10))
-
-    story.append(Paragraph(f"Total Area: {request.form.get('total_area')} m²", styles['Normal']))
-    story.append(Paragraph(f"Corner Deduction: {request.form.get('corner_area')} m²", styles['Normal']))
-    story.append(Paragraph(f"Net Area: {request.form.get('net_area')} m²", styles['Normal']))
-    story.append(Paragraph(f"Area with Wastage (10%): {request.form.get('area_waste')} m²", styles['Normal']))
-
-    story.append(Spacer(1,20))
-
     # ================= DISCLAIMER =================
+    story.append(Spacer(1,20))
     story.append(Paragraph("<b>DISCLAIMER</b>", styles['Heading3']))
     story.append(Paragraph(
-        "This calculation is provided as an estimate only. "
-        "All measurements should be verified before installation.",
+        "This calculation is an estimate only. Please verify all measurements before installation.",
         styles['Normal']
     ))
 
-    # ✅ FINAL BUILD (must stay inside function)
+    # ================= FINAL =================
     doc.build(story)
     buffer.seek(0)
 
