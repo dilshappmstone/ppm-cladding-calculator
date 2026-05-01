@@ -1151,6 +1151,7 @@ def history():
         <td>${q.total}</td>
         <td>
             <a href="/quote/view/{q.id}" class="view-btn">View</a>
+
             <form method="post" action="/pdf" target="_blank" style="display:inline;">
                 <input type="hidden" name="result_json" value='{q.result_json}'>
                 <button class="view-btn" style="background:#28a745;">PDF</button>
@@ -1225,6 +1226,7 @@ def history():
         <th>Project</th>
         <th>Date</th>
         <th>Total</th>
+        <th>Action</th>
     </tr>
 
     {rows}
