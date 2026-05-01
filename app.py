@@ -1154,11 +1154,12 @@ def history():
 
                 <form method="post" action="/pdf" target="_blank" style="display:inline;">
                     <input type="hidden" name="result_json" value='{q.result_json}'>
-                <button class="view-btn" style="background:#28a745;">PDF</button>
+                    <button class="view-btn" style="background:#28a745;">PDF</button>
                 </form>
             </td>
         </tr>
         """
+
     return f"""
     <html>
     <head>
@@ -1166,12 +1167,12 @@ def history():
     body {{
         font-family:Segoe UI;
         background:#f4f6f9;
-        padding:30px;
+        padding:20px;
     }}
 
     .card {{
         background:white;
-        padding:25px;
+        padding:20px;
         border-radius:12px;
         box-shadow:0 6px 20px rgba(0,0,0,0.08);
     }}
@@ -1184,18 +1185,50 @@ def history():
     th {{
         background:#111827;
         color:white;
+        text-align:left;
     }}
 
     th, td {{
         padding:12px;
     }}
 
+    td:nth-child(5),
+    th:nth-child(5) {{
+        text-align:right;
+    }}
+
     tr:nth-child(even) {{
         background:#f3f4f6;
     }}
 
+    .view-btn {{
+        background:#2d7ef7;
+        color:white;
+        border:none;
+        padding:6px 10px;
+        border-radius:6px;
+        cursor:pointer;
+        font-size:13px;
+    }}
+
+    .view-btn:hover {{
+        background:#1b5fd1;
+    }}
+
+    @media (max-width:768px) {{
+        table {{
+            display:block;
+            overflow-x:auto;
+            white-space:nowrap;
+        }}
+    }}
+
+    .actions {{
+        margin-top:20px;
+    }}
+
     .btn {{
-        padding:12px 18px;
+        padding:10px 14px;
         border-radius:8px;
         text-decoration:none;
         font-weight:600;
@@ -1203,7 +1236,7 @@ def history():
     }}
 
     .btn-dark {{
-        background:#111;
+        background:black;
         color:white;
     }}
 
@@ -1217,26 +1250,25 @@ def history():
     <body>
 
     <div class="card">
-    <h2>Quote History</h2>
+        <h2>Quote History</h2>
 
-    <table>
-    <tr>
-        <th>Quote No</th>
-        <th>Customer</th>
-        <th>Project</th>
-        <th>Date</th>
-        <th>Total</th>
-        <th>Action</th>
-    </tr>
+        <table>
+            <tr>
+                <th>Quote No</th>
+                <th>Customer</th>
+                <th>Project</th>
+                <th>Date</th>
+                <th>Total</th>
+                <th>Action</th>
+            </tr>
 
-    {rows}
+            {rows}
+        </table>
 
-    </table>
-
-    <div style="margin-top:20px; display:flex; gap:10px;">
-        <a href="/" class="btn-dark">← Dashboard</a>
-        <a href="/quote" class="btn-primary">+ New Quote</a>
-    </div>
+        <div class="actions">
+            <a href="/" class="btn btn-dark">← Dashboard</a>
+            <a href="/quote" class="btn btn-primary">+ New Quote</a>
+        </div>
 
     </div>
 
