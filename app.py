@@ -100,7 +100,7 @@ HTML = """
 <head>
 <title>PPM Cladding Calculator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAcRLQSvdZs_2zaIq0tspD54WBSvNsPKY4&libraries=places"></script>
 <style>
 body {
     font-family: 'Segoe UI', Arial, sans-serif;
