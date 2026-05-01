@@ -1142,23 +1142,23 @@ def history():
 
     rows = ""
     for q in quotes:
-    rows += f"""
-    <tr>
-        <td>{q.quote_number or '-'}</td>
-        <td>{q.customer or '-'}</td>
-        <td>{q.project or '-'}</td>
-        <td>{q.date.strftime('%d/%m/%Y')}</td>
-        <td>${q.total}</td>
-        <td>
-            <a href="/quote/view/{q.id}" class="view-btn">View</a>
+        rows += f"""
+        <tr>
+            <td>{q.quote_number or '-'}</td>
+            <td>{q.customer or '-'}</td>
+            <td>{q.project or '-'}</td>
+            <td>{q.date.strftime('%d/%m/%Y')}</td>
+            <td>${q.total}</td>
+            <td>
+                <a href="/quote/view/{q.id}" class="view-btn">View</a>
 
-            <form method="post" action="/pdf" target="_blank" style="display:inline;">
-                <input type="hidden" name="result_json" value='{q.result_json}'>
+                <form method="post" action="/pdf" target="_blank" style="display:inline;">
+                    <input type="hidden" name="result_json" value='{q.result_json}'>
                 <button class="view-btn" style="background:#28a745;">PDF</button>
-            </form>
-        </td>
-    </tr>
-    """
+                </form>
+            </td>
+        </tr>
+        """
     return f"""
     <html>
     <head>
