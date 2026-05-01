@@ -391,23 +391,28 @@ window.onload = function() {
 function initAutocomplete() {
     const input = document.getElementById("address");
 
-    if (!input) return;
+    if (!input || typeof google === "undefined") {
+        console.log("Google not loaded yet");
+        return;
+    }
 
     const autocomplete = new google.maps.places.Autocomplete(input, {
         types: ["geocode"],
-        componentRestrictions: { country: "au" } // Australia
+        componentRestrictions: { country: "au" }
     });
 
     autocomplete.addListener("place_changed", function () {
         const place = autocomplete.getPlace();
 
-        if (!place.formatted_address) return;
-
-        input.value = place.formatted_address;
+        if (place && place.formatted_address) {
+            input.value = place.formatted_address;
+        }
     });
 }
 
-window.addEventListener("load", initAutocomplete);
+window.onload = function () {
+    setTimeout(initAutocomplete, 500); // ensures Google loads first
+};
 </script>
 
 </head>
@@ -460,7 +465,7 @@ window.addEventListener("load", initAutocomplete);
 <input name="project">
 
 <label>Address</label>
-<input id="address" name="address" placeholder="Start typing address...">
+<input id="address" name="address" placeholder="Start typing address..." autocomplete="off">
 </div>
 
 <button>Generate Quote</button>
