@@ -1465,16 +1465,15 @@ def pdf():
     ]
 
     if get_val("install") == "on":
-        data.append([
-            get_val("body_code")+"-I",
-            "Installation Body",
-            get_val("area_waste"),
-            "m²",
-            "$120",
-            "$"+money(get_val("install_body"))
-        ])
+    data.append([
+        get_val("body_code")+"-I",
+        "Installation Body",
+        get_val("area_waste"),
+        "m²",
+        "$120",
+        "$"+money(get_val("install_body"))
+    ])
 
-if get_val("install") == "on":
     data.append([
         get_val("corner_code")+"-I",
         "Installation Corner",
@@ -1503,15 +1502,16 @@ if float(get_val("grout_total") or 0) > 0:
         "-",
         "$"+money(get_val("grout_total"))
     ])
-    table = Table(data)
-    table.setStyle(TableStyle([
-        ('GRID',(0,0),(-1,-1),0.8,colors.black),
-        ('BACKGROUND',(0,0),(-1,0),colors.black),
-        ('TEXTCOLOR',(0,0),(-1,0),colors.white),
-        ('ALIGN',(2,1),(-1,-1),'RIGHT')
-    ]))
 
-    story.append(table)
+table = Table(data)
+table.setStyle(TableStyle([
+    ('GRID',(0,0),(-1,-1),0.8,colors.black),
+    ('BACKGROUND',(0,0),(-1,0),colors.black),
+    ('TEXTCOLOR',(0,0),(-1,0),colors.white),
+    ('ALIGN',(2,1),(-1,-1),'RIGHT')
+]))
+
+story.append(table)
 
     # ================= TOTALS =================
     totals = [
