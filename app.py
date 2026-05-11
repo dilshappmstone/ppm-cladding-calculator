@@ -1380,16 +1380,7 @@ def view_quote(id):
 @app.route("/pdf/<int:id>")
 @login_required
 def pdf_from_history(id):
-
-    q = Quote.query.get_or_404(id)
-
-    import json
-    result = json.loads(q.result_json)
-
-    # reuse your existing PDF logic
-    # BUT replace request.form.get(...) with result["..."]
-
-    return your_pdf_function(result)
+    return redirect("/history")
     
 # =========================
 # PDF
