@@ -1148,6 +1148,9 @@ def quote():
             + over_height_total
         )
 
+        gst = subtotal * GST_RATE
+        total = subtotal + gst
+        
         # ================= RESULT =================
         result = {
             "product_name": p["name"],
@@ -1471,34 +1474,35 @@ def pdf():
             "$"+money(get_val("install_body"))
         ])
 
-    if float(get_val("over_height_total") or 0) > 0:
-        data.append([
-            "OH",
-            "Over Height Installation",
-            get_val("over_height_area"),
-            "m²",
-            "$50",
-            "$"+money(get_val("over_height_total"))
-        ])
+if get_val("install") == "on":
+    data.append([
+        get_val("corner_code")+"-I",
+        "Installation Corner",
+        get_val("corner_lm"),
+        "LM",
+        "$120",
+        "$"+money(get_val("install_corner"))
+    ])
 
-        data.append([
-            get_val("corner_code")+"-I",
-            "Installation Corner",
-            get_val("corner_lm"),
-            "LM",
-            "$120",
-            "$"+money(get_val("install_corner"))
-        ])
+if float(get_val("over_height_total") or 0) > 0:
+    data.append([
+        "OH",
+        "Over Height Installation",
+        get_val("over_height_area"),
+        "m²",
+        "$50",
+        "$"+money(get_val("over_height_total"))
+    ])
 
-        [
-            "GROUT",
-            f"Grouting | {get_val('grouting')}",
-            "-",
-            "-",
-            "-",
-            "$"+money(get_val("grout_total"))
-        ],
-
+if float(get_val("grout_total") or 0) > 0:
+    data.append([
+        "GROUT",
+        f"Grouting | {get_val('grouting')}",
+        "-",
+        "-",
+        "-",
+        "$"+money(get_val("grout_total"))
+    ])
     table = Table(data)
     table.setStyle(TableStyle([
         ('GRID',(0,0),(-1,-1),0.8,colors.black),
