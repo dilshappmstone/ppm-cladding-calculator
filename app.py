@@ -1455,7 +1455,8 @@ def pdf():
         ]
     ]
 
-        if get_val("install") == "on":
+            if get_val("install") == "on":
+
         data.append([
             get_val("body_code")+"-I",
             "Installation Body",
@@ -1475,6 +1476,7 @@ def pdf():
         ])
 
     if float(get_val("over_height_total") or 0) > 0:
+
         data.append([
             "OH",
             "Over Height Installation",
@@ -1485,6 +1487,7 @@ def pdf():
         ])
 
     if float(get_val("grout_total") or 0) > 0:
+
         data.append([
             "GROUT",
             f"Grouting | {get_val('grouting')}",
