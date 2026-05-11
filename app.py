@@ -371,6 +371,13 @@ function addArea() {
 
             <label>Height</label>
             <input name="curve_height_${areaCount}">
+
+            <label style="margin-top:12px;">
+            <input type="checkbox" 
+               name="over_height_${areaCount}" 
+               style="width:auto; margin-right:8px;">
+            Over Height Installation (Over 2m)
+            </label>
         </div>
 
     </div>
