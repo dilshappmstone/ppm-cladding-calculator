@@ -1416,7 +1416,10 @@ def pdf():
     story.append(Paragraph("<b>PPM Stone</b>", styles['Title']))
     story.append(Paragraph("PPM Enterprises Pty Ltd", styles['Normal']))
     story.append(Paragraph("Factory 2, Dandenong South VIC 3175", styles['Normal']))
-
+    story.append(Paragraph("Tel: 1300 278 355", styles['Normal']))
+    story.append(Paragraph("Email: admin@ppmstone.com.au", styles['Normal']))
+    story.append(Paragraph("ABN: 79 116 045 553", styles['Normal']))
+    
     story.append(Spacer(1,10))
     story.append(Paragraph("<b>QUOTE</b>", center))
 
@@ -1565,7 +1568,9 @@ def pdf():
     story.append(Spacer(1,20))
     story.append(Paragraph("<b>DISCLAIMER</b>", styles['Heading3']))
     story.append(Paragraph(
-        "This calculation is an estimate only. Please verify all measurements before installation.",
+        "This is an estimate of cost, the final figures may vary after the final site inspection."
+        "Please note that our bluestones and stone claddings are natural, so variations in colour, texture, and veining may occur. "
+        "These differences from samples or images are natural and enhance the stone's unique character.",
         styles['Normal']
     ))
 
