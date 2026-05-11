@@ -77,6 +77,8 @@ CORNER_RETURN = 0.1
 INSTALL_BODY_RATE = 120
 INSTALL_CORNER_RATE = 120
 GST_RATE = 0.10
+GROUT_SURFACE_RATE = 180
+OVER_HEIGHT_RATE = 50
 
 # =========================
 # PRODUCTS (WITH SIZE)
@@ -312,6 +314,13 @@ function addArea() {
 
             <label>Corner LM</label>
             <input name="corner_${areaCount}">
+
+            <label style="margin-top:12px;">
+            <input type="checkbox" 
+                   name="over_height_${areaCount}" 
+                   style="width:auto; margin-right:8px;">
+            Over Height Installation (Over 2m)
+            </label>
         </div>
 
         <!-- PILLAR -->
@@ -332,6 +341,13 @@ function addArea() {
                 <option value="3">3</option>
                 <option value="4">4</option>
             </select>
+
+            <label style="margin-top:12px;">
+            <input type="checkbox" 
+                   name="over_height_${areaCount}" 
+                   style="width:auto; margin-right:8px;">
+            Over Height Installation (Over 2m)
+            </label>
         </div>
 
         <!-- CURVE -->
@@ -432,6 +448,17 @@ window.onload = function() {
 </div>
 
 <div class="section">
+
+<label>Grouting Option</label>
+
+<select name="grouting">
+    <option value="line">Line Grouting (No Charge)</option>
+    <option value="surface">Surface-Filled Grouting (+$180/m² + GST)</option>
+</select>
+
+</div>
+
+<div class="section">
 <label>Customer Name</label>
 <input name="customer">
 
@@ -513,6 +540,20 @@ Corner: {{result.corner_pcs}} pcs × ${{result.corner_rate}}
 {% if result.install %}
 <p>Installation Body: <b>${{result.install_body}}</b></p>
 <p>Installation Corner: <b>${{result.install_corner}}</b></p>
+{% endif %}
+
+<p>
+Grouting:
+<b>{{result.grouting}}</b>
+= <b>${{result.grout_total}}</b>
+</p>
+
+{% if result.over_height_total > 0 %}
+<p>
+Over Height Installation:
+{{result.over_height_area}} m² × $50
+= <b>${{result.over_height_total}}</b>
+</p>
 {% endif %}
 
 <hr>
@@ -987,7 +1028,8 @@ def quote():
 
         total_area = 0
         total_corner_lm = 0
-
+        over_height_area = 0
+        
         i = 1
         found_multi = False
         area_list = []
@@ -1010,6 +1052,7 @@ def quote():
             sides = int(request.form.get(f"sides_{i}") or 3)
 
             curve_height = float(request.form.get(f"curve_height_{i}") or 0)
+            over_height = request.form.get(f"over_height_{i}")
 
             # ===== TYPE LOGIC =====
             if typ in ["wall","floor"]:
@@ -1043,6 +1086,9 @@ def quote():
             total_area += area
             total_corner_lm += corner
 
+            if over_height:
+                over_height_area += area
+
             # ✅ FIX 3: STORE curve_height
             area_list.append({
                 "type": typ,
@@ -1054,6 +1100,7 @@ def quote():
                 "depth": depth,
                 "sides": sides,
                 "curve_height": curve_height,
+                "over_height": True if over_height else False,
                 "area": round(area, 2)
             })
 
@@ -1074,9 +1121,25 @@ def quote():
             install_body = area_waste*INSTALL_BODY_RATE
             install_corner = total_corner_lm*INSTALL_CORNER_RATE
 
-        subtotal = body_total+corner_total+install_body+install_corner
-        gst = subtotal*GST_RATE
-        total = subtotal+gst
+        # ================= GROUTING =================
+        grouting = request.form.get("grouting")
+
+        grout_total = 0
+
+        if grouting == "surface":
+            grout_total = area_waste * GROUT_SURFACE_RATE
+
+        # ================= OVER HEIGHT =================
+        over_height_total = over_height_area * OVER_HEIGHT_RATE
+
+        subtotal = (
+            body_total
+            + corner_total
+            + install_body
+            + install_corner
+            + grout_total
+            + over_height_total
+        )
 
         # ================= RESULT =================
         result = {
@@ -1113,6 +1176,12 @@ def quote():
             "total_area": round(total_area, 2),
             "corner_area": round(corner_area, 2),
             "net_area": round(net_area, 2),
+
+            "grouting": grouting,
+            "grout_total": round(grout_total, 2),
+
+            "over_height_area": round(over_height_area, 2),
+            "over_height_total": round(over_height_total, 2),
         }
 
         # ================= SAVE =================
@@ -1395,6 +1464,16 @@ def pdf():
             "$"+money(get_val("install_body"))
         ])
 
+    if float(get_val("over_height_total") or 0) > 0:
+        data.append([
+            "OH",
+            "Over Height Installation",
+            get_val("over_height_area"),
+            "m²",
+            "$50",
+            "$"+money(get_val("over_height_total"))
+        ])
+
         data.append([
             get_val("corner_code")+"-I",
             "Installation Corner",
@@ -1403,6 +1482,15 @@ def pdf():
             "$120",
             "$"+money(get_val("install_corner"))
         ])
+
+        [
+            "GROUT",
+            f"Grouting | {get_val('grouting')}",
+            "-",
+            "-",
+            "-",
+            "$"+money(get_val("grout_total"))
+        ],
 
     table = Table(data)
     table.setStyle(TableStyle([
